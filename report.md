@@ -101,6 +101,9 @@ environments for the challenges.
 If I get round to it, also talk about a python web server for generating,
 building and transferring custom binaries.
 
+Additionally, this would be the place to talk about how solution scripts are
+automatically generated, and the provided utilities that go along with them.
+
 # Results
 
 No clue exactly what these will be yet.
