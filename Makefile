@@ -8,5 +8,5 @@ clean:
 	rm -f report.pdf
 
 %.pdf: %.md
-	pandoc $< -o $@ --from markdown --template eisvogel --listings
+	pandoc $< -o $@ --from markdown --template eisvogel --listings --number-sections
 
