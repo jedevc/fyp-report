@@ -170,11 +170,11 @@ external variables (only if the specification requires them).
 
 ...how exactly we assign interpretations.
 
-After all blocks and chunk have been given their interpretation, we can begin
-to apply those through all statements in the specification. We do this in
-two passes, to remove as much complexity as possible in the first pass to make
-the the latter, more complex, pass easier to reason about. In the first pass,
-we remove all calls to inline blocks, while in the second pass, we remove all
+After all blocks and chunk have been assigned an interpretation, we can begin
+to apply those through all statements in the specification. We do this in two
+passes, to remove as much complexity as possible in the first pass to make the
+the latter, more complex, pass easier to reason about. In the first pass, we
+remove all calls to inline blocks, while in the second pass, we remove all
 calls to function blocks.
 
 ### Inline call reduction
@@ -183,26 +183,37 @@ calls to function blocks.
 
 ### Function call reduction
 
-In the second pass, we resolve all calls to the remaining blocks, those that
-are assigned a "function" interpretation. At this stage, we don't create the
-functions themselves, but simply the calls to them. However, this is not as
-simple as the previous stage, we can't just insert a call of the form `block()`
-- some number of arguments may need to be passed! This happens when a chunk
-that is used in the block is assigned a "local" interpretation and is also
-accessed in some other block that eventually (either directly or indirectly)
-calls to it.
+In this next pass, we can now resolve all calls to the remaining blocks, those
+that are assigned a "function" interpretation. At this stage, we don't create
+the functions themselves, but simply compute what the calls to them should look
+like. However, this is not as simple as the previous stage, we can't just
+insert a call of the form `block()` - some number of arguments may need to be
+passed!
+
+The need for introducing function arguments occurs when a chunk that is used in
+the block is assigned a "local" interpretation and is also accessed in some
+other block that eventually (either directly or indirectly) calls to it.
+
+For example, suppose that a block $x$ calls block $y$, which we can notate as
+$x \rightarrow y$. If a variable $\alpha$ is declared in block $x$ as a local
+variable, then for $y$ to access this variable, the call $x \rightarrow y$ can
+be modified to pass $\alpha$ as a parameter. By performing this computation for
+all variables, for all calls, we can compute the function signature of each
+block, and so modify all the vulnspec block calls into function-style calls.
 
 #### Rooting
 
 To determine which function calls need to be patched with which parameters, we
-need to "root" each chunk, i.e. find a function block such that all references
-to a chunk are contained in that block and it's children. We can then add that
-chunk's variables to the collection of local variables (at a later stage).
+first need to "root" each chunk, i.e. find a function block such that all
+references to a chunk are contained in that block and it's descendants. We can
+then add that chunk's variables to the collection of local variables (at a
+later stage when we actually construct the function).
 
 This process is essentially a variation of the lowest common ancestor problem
-for graphs. However, the usual techniques for calculating this for trees or
-directed acyclic graphs aren't sufficient since the call graph can contain
-cycles through the expression of co-recursive blocks.
+in graph theory. However, the usual techniques for calculating this are for trees
+or directed acyclic graphs, which aren't sufficient for this problem since the
+call graph may contain cycles through the expression of recursive or
+co-recursive blocks.
 
 A naive algorithm (and what we initially implemented) finds every block that
 references a local variable, then computes all possible paths to that block.
@@ -212,8 +223,9 @@ valid, however, as we show later with an example, it may not be optimal.
 
 The more complex "deepest-valid" algorithm starts the same way, computing all
 paths to a variable. Then, it finds the complete set of valid owners by finding
-all blocks that are present in all paths, removing those blocks which are
-part of a cycle. Finally, the deepest of these blocks is selected to be the
+the set of all blocks that are present in all paths (since the root block has
+to be present in every possible execution), removing those blocks which are
+part of a cycle. Finally, the deepest of these blocks can be selected to be the
 owner.
 
 To see the difference in these algorithms, consider the following
@@ -255,12 +267,18 @@ By traversing the call graph, we can easily compute all paths to each variable.
 - $e$ is referenced in all blocks by $x$, $x \rightarrow y$, $x \rightarrow y \rightarrow z$ and $x \rightarrow z$
 
 The naive method, which computes the common prefixes of all paths will
-correctly place `a`, `c` and `e` in `x` and `b` in `y`. However, it will
-sub-optimally place `d` into `x`, when it could be easily placed into `z`.
+correctly place $a$, $c$ and $e$ in $x$ and $b$ in $y$. However, it will
+sub-optimally place $d$ into $x$, when it could be easily placed into $z$.
 
-The deepest-valid algorithm correctly places `d`, by first detecting `x` and
-`z` as valid locations for the variable, and then choosing the deepest of the
+The deepest-valid algorithm correctly places $d$, by first detecting $x$ and
+$z$ as valid locations for the variable, and then choosing the deepest of the
 two.
+
+Placing all the variables, we can compute the following:
+
+- $a$, $c$ and $e$ can be only declared in $x$
+- $b$ can be declared in $x$ or $y$, and so is declared in the deepest, $y$
+- $d$ can be declared in $x$ or $z$, and so is declared in the deepest, $z$
 
 #### Signature
 
@@ -268,14 +286,60 @@ With each chunk rooted, we can now easily find what each function signature
 should be. For each function call between the root of a variable's chunk and
 the same variable's usage, we need to pass that variable in the function call.
 
-For each block: `trace.py:17`
+Intuitively, this works because based on the above rooting stage, we know that
+each block that requires a variable will have access to it through an ancestor
+block. Then inductively, we can show that a block with direct access to a
+variable in its scope will pass access to that variable to all it's children
+which it calls. Because of this, all descendants of the root block that need
+access to the variable can get it!
+
+Practically, the signatures of function calls can be constructed by iterating
+through all paths to all variable (after skipping to the root), and patching
+each call to also include the variable name that is needed at a lower level.
+
+For example, for the variable $e$ above (rooted at $x$), from the path $x
+\rightarrow y \rightarrow z$, we know that calls $x \rightarrow y$ and
+$y \rightarrow z$ must contain $x$ as a parameter. Repeating this for all
+variables and paths, we can create a full picture of all rooted variables and
+the function signatures:
+
+| Block | Parameters | Local variables |
+| :- | :- | :- |
+| $x$ | $()$ | $(a, c, e)$ |
+| $y$ | $(c, e)$ | $(b)$ |
+| $z$ | $(c, e)$ | $(d)$ |
 
 ### Parameter lifting
 
-Details of how we modify/patch types as we move variables across function
-boundaries.
+Unfortunately, the above description only covers half the story - it accurately
+describes how to decide where in memory variables should be located, and how to
+share access to them, however, using only this information, the function
+signatures will be clearly incorrect.
 
-Tracing, lifting, etc
+For example:
+
+```
+chunk a : int
+
+block x {
+  a = 1
+  call y
+}
+
+block y {
+  a = 2
+}
+```
+
+Using just the above algorithms, we can deduce that the function signature of
+$y$ should be $\textbf{fn} (int) void$. However, since $y$ assigns to the
+variable $a$, this would only change a copy of $a$, instead of the value of $a$
+itself. To resolve this, we perform a process of "lifting", which lifts simple
+variables into more complex l-value expressions, in this case changing the
+function signature to accept a pointer to $a$, which allows $y$ to modify the
+value correctly.
+
+...
 
 ### Finalization
 
