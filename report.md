@@ -386,7 +386,58 @@ of abstract to concrete values is performed after parsing, but before
 translation into the block-chunk graph.
 
 Each template has 2 components: a name, and an optional definition (note that
-for the first usage of a template, the definition is not optional).
+for the first usage of a template, the definition is not optional). In
+vulnspec, they are written: `<Name; Definition>`, where `Name` is a valid
+vulnspec name, and `Definition` is a Python expression. A templated value can
+occur wherever a normal value might be expected.
+
+During template instantiation, we traverse all the chunks, then all the blocks
+in their order of declaration. When we encounter a template node, we evaluate
+the Python expression and replace it with a `ValueNode` dependent on the type of
+the result. For example, we replace a Python `int` with an `IntValueNode`, a
+Python `str` with a `StringValueNode`, etc. If a template definition is not
+provided, then we simply retrieve a cached result from a previously
+instantiated template with the same name.
+
+During template evaluation we provide a number of variables and functions to
+more easily create complex expressions. In the global scope, we allow access to
+a number of useful libraries (`random`, `string`, etc), as well as the
+translations from vulnspec to C names. Meanwhile, in the local scope, we allow
+referencing any already instantiated template values - this allows creating
+template values that depend on the value of another template, a vital feature
+in constructing vulnerable programs.
+
+For example:
+
+```
+chunk buffer : [<Length; 32 * random.randint(1, 8)>]char
+block foo {
+  fgets@libc.stdio(buffer, <BadLength; Length + 1>, stdout@libc.stdio)
+}
+```
+
+In the above, we randomly define the length of the `buffer`, and then use the
+same value later to create a single NULL-byte overflow, which could be used as
+part of an RCE exploit.
+
+While templates are defined as abstract values, we can also use them inside C
+literal expressions and statements, which allow us to perform complex randomization
+inside parts of the program which cannot be defined in vulnspec due to the
+limitations of the language.
+
+To demonstrate, in the following specification, both block $x$ and $y$, will generate
+equivalent outputs:
+
+```
+chunk a : int
+block x {
+  a = sizeof(uint8_t@libc.stdint)
+}
+
+block y {
+  a = $(sizeof(<T; table.types["uint8_t@libc"]>))
+}
+```
 
 ### Random name generation
 
