@@ -39,8 +39,24 @@ Explain the current (and original) design goals of the system
 
 ## Stages
 
-Detail the main mechanics and stages of the language (since those are used to
-roughly structure the rest of the report)
+To go from the raw text specification to final artifacts, we move through a
+number of discrete stages of processing. These stages move from a low-level
+representation of the specification, to a high-level, programmatic view,
+finally producing low-level C code as an output.
+
+The 6 stages are:
+
+- **Parsing** to produce an Abstract Syntax Tree
+- **Type checking**
+- **Translation** to an Abstract Syntax Graph, referred to as the block-chunk graph
+- **Interpretation** to remove and transform all blocks
+- **Code generation** to produce final C code
+- Optional **environment construction** to produce binaries and docker containers
+
+Aside from these core stages, a number of smaller minor operations and
+debugging steps are also performed in-between them, to provide additional
+smaller pieces of functionality that are only really possible to achieve at
+that exact level of representation.
 
 ## Specification
 
@@ -151,6 +167,10 @@ by appending `"@<lib>.<header-name>"` - e.g. `printf` becomes
 vulnspec-style type, using a stack model (**More elaboration needed**). We can
 then write these to JSON files, ready for use in processing specifications that
 utilize libraries.
+
+## Translation
+
+...convert to ASG.
 
 ## Interpretation
 
