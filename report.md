@@ -353,14 +353,40 @@ transformed contents of the block to form the main body of the function.
 
 ## Randomization
 
-### Templates
+An important aspect of vulnspec is to allow generating different programs that
+all contain the same described vulnerability. While during the interpretation
+process we introduce some randomness based on how we restructure the
+block-chunk graph, these changes do not actually introduce major changes into
+how the program actually runs, or the details of what an exploit might look
+like.
 
-...
+To actually significantly semantically modify the output for a number of
+outputs, we introduce a number of possible techniques, all of which have been
+developed and implemented in vulnspec, however, it is by no means a complete
+list of all the possible transformations that could be constructed.
+
+Some of these techniques introduce surface level changes, such as the random
+name generation, others introduce semantic difference in the program (and the
+required exploit) such as templating, and others introduce both. Both of these
+techniques are important together - generated programs must not only behave
+slightly differently, and require different exploits for them, but they must
+also look significantly different.
 
 ### NOPs
 
 Introducing randomizations by applying NOPs, and the general approach, as well
 as pitfalls to avoid.
+
+### Templates
+
+Templates are a powerful technique to modify parts of the program at
+synthesization time. Essentially, they are abstract values that are not fixed,
+but take on a single concrete value for a single synthesis. This instantiation
+of abstract to concrete values is performed after parsing, but before
+translation into the block-chunk graph.
+
+Each template has 2 components: a name, and an optional definition (note that
+for the first usage of a template, the definition is not optional).
 
 ### Random name generation
 
