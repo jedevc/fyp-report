@@ -463,18 +463,56 @@ block y {
 
 ...
 
-## Packaging
+## Environments
 
-Talk through generating the correct compiler options, and explain some of the
-tooling around this.
+At the end of the pipeline we produce valid, working C code that contains the
+desired vulnerabilities. However, vulnerable C code by itself doesn't guarantee
+exploitation, or even if they do, provide no details as to the difficulty of
+producing a working exploit - these factors often down to compiler options,
+kernel settings and the setup of the environment.
 
-Also, talk about the docker wrapping, and automatically generating flexible
-environments for the challenges.
+Therefore, to bridge this gap, we provide some additional utilities for
+producing challenge binaries, suitable environments to run them in, and
+automatic solution script generation to validate that the produced programs are
+actually solvable.
 
-If I get round to it, also talk about a python web server for generating,
-building and transferring custom binaries.
+These binaries and environments are created based on a variety of comment-based
+configuration options. Defining these configuration options in the comments
+clearly separates the process of program synthesis from the optional process of
+generating valid environments.
 
-Additionally, this would be the place to talk about how solution scripts are
+These configuration options are allocated into 4 groups:
+
+- Compiler settings
+- Security settings
+- Environment settings
+- Additional files
+
+These options are used across two phases, compilation and environment
+generation.
+
+During compilation, we use the configuration options to:
+
+- Determine which compiler to use
+- Decide which architecture to compile for (most frequently used to switch between 32
+  and 64 bit)
+- Decide whether to strip the final executable or not (to make for a harder
+  reverse-engineering experience)
+- Decide whether to generate debugging information
+- Enable various security settings, such as NX protections, PIE executables,
+  stack canaries and RELRO.
+
+During environment generation, we use the options to:
+
+- Create a system layout that allows for reading the flag on successful
+  exploitation of the vulnerable program
+- Automatically build a Dockerfile to generate a docker image for deployment
+
+... **describe what happens next**
+
+### Auto-solvers
+
+This would be the place to talk about how solution scripts are
 automatically generated, and the provided utilities that go along with them.
 
 # Results
@@ -490,4 +528,8 @@ No clue exactly what these will be yet.
 ## Future work
 
 # References
+
+# Appendices
+
+# Appendix A (Environment configuration options)
 
