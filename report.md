@@ -14,9 +14,11 @@ titlepage-rule-color: "EEEEEE"
 
 # Abstract
 
-Blah blah blah.
+TODO
 
 # Introduction
+
+TODO
 
 - Explain context of CTF competitions
 - Explain automatic flag generation
@@ -25,17 +27,27 @@ Blah blah blah.
 
 ## Problem statement
 
+TODO
+
 ## Related work
 
-What already exists?
+TODO
+
+- What already exists?
 
 ## Report Overview
 
+TODO
+
 # Design
+
+TODO
 
 ## Goals
 
-Explain the current (and original) design goals of the system
+TODO
+
+- Explain the current (and original) design goals of the system
 
 ## Stages
 
@@ -60,18 +72,26 @@ that exact level of representation.
 
 ## Specification
 
-Probably some fancy BNF grammars, (simplified) language specification and list
-of features
+TODO
+
+- Probably some fancy BNF grammars, (simplified) language specification and list
+  of features
 
 # Implementation
 
-Explain all the awesome technical implementation details.
+TODO
+
+- Explain all the awesome technical implementation details.
 
 ## Lexical analysis and parsing
 
-Explain moving through stream -> tokens -> tree -> graph
+TODO
+
+- Explain moving through stream -> tokens -> tree -> graph
 
 ## Type checking
+
+TODO
 
 Explain how our rough type-checking modelling works. Can include some neat
 diagrams of the graphs we can use.
@@ -170,6 +190,8 @@ utilize libraries.
 
 ## Translation
 
+TODO
+
 ...convert to ASG.
 
 ## Interpretation
@@ -188,6 +210,8 @@ external variables (only if the specification requires them).
 
 ### Generation
 
+TODO
+
 ...how exactly we assign interpretations.
 
 After all blocks and chunk have been assigned an interpretation, we can begin
@@ -199,7 +223,7 @@ calls to function blocks.
 
 ### Inline call reduction
 
-...
+TODO
 
 ### Function call reduction
 
@@ -359,7 +383,7 @@ variables into more complex l-value expressions, in this case changing the
 function signature to accept a pointer to $a$, which allows $y$ to modify the
 value correctly.
 
-...
+TODO
 
 ### Finalization
 
@@ -370,6 +394,8 @@ functions.
 We can use the already-computed function signatures to construct a list of
 arguments, the rooting information to work out local variables, and the
 transformed contents of the block to form the main body of the function.
+
+...
 
 ## Randomization
 
@@ -393,6 +419,8 @@ slightly differently, and require different exploits for them, but they must
 also look significantly different.
 
 ### NOPs
+
+TODO
 
 Introducing randomizations by applying NOPs, and the general approach, as well
 as pitfalls to avoid.
@@ -525,7 +553,7 @@ As expected, this generates a combination of the results from above:
 | :- | :- |
 | `set`, `teol`, `i`, `o_by`, `st` | `systow10`, `isattroy`, `cog`, `undestach`, `fws` |
 
-...the guarantees of this new model.
+TODO: ...the guarantees of this new model.
 
 To generate the probabilities for this model, we use the same primitives for
 extracting Ctags from `libmusl` as the builtin generator. Essentially we
@@ -583,28 +611,42 @@ During environment generation, we use the options to:
   exploitation of the vulnerable program
 - Automatically build a Dockerfile to generate a docker image for deployment
 
-... **describe what happens next**
+TODO: **describe what happens next**
 
 ### Auto-solvers
+
+TODO
 
 This would be the place to talk about how solution scripts are
 automatically generated, and the provided utilities that go along with them.
 
 # Results
 
+TODO
+
 No clue exactly what these will be yet.
 
 # Conclusion
 
+TODO
+
 ## Summary
+
+TODO
 
 ## Evaluation
 
+TODO
+
 ## Future work
+
+TODO
 
 # References
 
 # Appendices
 
-# Appendix A (Environment configuration options)
+## Appendix A (Environment configuration options)
+
+TODO
 

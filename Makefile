@@ -4,6 +4,9 @@ all: build
 
 build: report.pdf
 
+wordcount:
+	pandoc --lua-filter wordcount.lua report.md
+
 clean:
 	rm -f report.pdf
 
