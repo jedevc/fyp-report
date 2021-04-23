@@ -223,7 +223,37 @@ calls to function blocks.
 
 ### Inline call reduction
 
-TODO
+In the first pass, we attempt to remove all vulnspec-style calls that reference
+blocks with an inline interpretation. By doing this, we simplify the process
+for the next stage, since all remaining calls have function interpretations, so
+the resulting code can make a number of assumptions that allow for a simpler
+implementation.
+
+To reduce the inline calls, we map over each statement in every block,
+detecting if a call is made to an inline block. If it is, we replace it with a
+group of statements, which are the mapped statements that make up the block it
+references (this is slightly inefficient, since we might end up mapping a
+statement twice, but it does ensure that there are no orphan inline calls).
+This statement group is a construct only created by this specific portion of
+the code, and essentially represents a collection of statements that should be
+viewed as a series of lines of code - this is mainly provided to simplify the
+process of defining a mapping function, so that the type can remain
+$\text{Block} \to \text{Block}$.
+
+However, it is possible in a number of edge cases that the above procedure
+won't work entirely correctly. This is because the exact order that blocks are
+visited in still matters despite the additional level of recursive mapping. If
+a function block is modified as part of the above procedure, then other
+function blocks that refer to this function block will still point to the old
+version, not the new one, as a side-effect of using a more condensed graph
+representation.
+
+To resolve this issue, after mapping over every block completely, after all
+stages, we "repair" all pointers by looking up the name of the block that they
+expect to be pointing at, and directing it to the new, correct block.
+
+After all this, all inline calls are correctly removed, and the next stage of
+interpretation can begin.
 
 ### Function call reduction
 
@@ -376,12 +406,12 @@ block y {
 ```
 
 Using just the above algorithms, we can deduce that the function signature of
-$y$ should be $\textbf{fn} (int) void$. However, since $y$ assigns to the
-variable $a$, this would only change a copy of $a$, instead of the value of $a$
-itself. To resolve this, we perform a process of "lifting", which lifts simple
-variables into more complex l-value expressions, in this case changing the
-function signature to accept a pointer to $a$, which allows $y$ to modify the
-value correctly.
+$y$ should be $\text{fn} \ (\text{int}) \ \text{void}$. However, since $y$
+assigns to the variable $a$, this would only change a copy of $a$, instead of
+the value of $a$ itself. To resolve this, we perform a process of "lifting",
+which lifts simple variables into more complex l-value expressions, in this
+case changing the function signature to accept a pointer to $a$, which allows
+$y$ to modify the value correctly.
 
 TODO
 
