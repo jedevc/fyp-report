@@ -485,18 +485,49 @@ also look significantly different.
 
 ### NOPs
 
-TODO
+One of the most significant techniques for providing powerful randomization are
+the introduction of No-Operation blocks (shortened to NOPs), which provide
+variance across the temporal domain.
 
-Introducing randomizations by applying NOPs, and the general approach, as well
-as pitfalls to avoid.
+Essentially, each NOP block does nothing, except to provide some small
+additional layer of complexity to the challenge. For example, the simplest NOP
+is blank and does nothing at all, while some more complex NOPs introduce random
+delays, or print out the value of a counter as a debugging log statement, or
+introduce interesting comments into the code.
+
+To add NOPs into the block-chunk graph, we traverse it, looking for vulnspec
+calls. When we encounter one, with a random probability we alter it to instead
+call a pre-defined NOP, and then for that new NOP block to call to the original
+target. Note that at this point, interpretations have not been assigned, so
+these could appear inline, or alternatively, as their own functions.
+
+...**DIAGRAM**...
+
+All NOPs are defined in the `vulnspec/data/nops/` folder, as individual blocks
+with a `nop` constraint to mark that they should be parsed and be avaiable for
+random selection. For example, a simple `log` NOP:
+
+```
+block (nop) log {
+    puts@libc.stdio("[*] successful")
+}
+```
+
+Introducing NOPs is slightly more complex than detailed above, especially when
+the NOP makes references to other blocks, chunks or externs. To solve this,
+when initializing the collection of NOPs, we traverse each NOP, exploring it's
+connection to other blocks (including other NOPs, which is valid), as well as
+it's variable references. Then, when we introduce a NOP into the block-chunk
+graph, we also have to include all the blocks, chunks and externs that it
+references.
 
 ### Templates
 
 Templates are a powerful technique to modify parts of the program at
-synthesization time. Essentially, they are abstract values that are not fixed,
-but take on a single concrete value for a single synthesis. This instantiation
-of abstract to concrete values is performed after parsing, but before
-translation into the block-chunk graph.
+synthesization time, specifically over the spatial domain. Essentially, they
+are abstract values that are not fixed, but take on a single concrete value for
+a single synthesis. This instantiation of abstract to concrete values is
+performed after parsing, but before translation into the block-chunk graph.
 
 Each template has 2 components: a name, and an optional definition (note that
 for the first usage of a template, the definition is not optional). In
