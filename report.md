@@ -746,10 +746,45 @@ pre-defined setup as well as specified ports and setup scripts can be created.
 
 ### Auto-solvers
 
-TODO
+Over a couple years of running and playing CTFs in academic settings, one of
+the concerns that constantly emerges is the need to verify that challenges are
+solvable. If a challenge is broken, it should be detected early on in the
+development process, to allow the challenge designer time to amend it.
+The widely accepted solution is to automate this, by requiring that all
+challenges provide a solver script to automatically extract the flag from a
+challenge so that verification is easy, and regressions can be tracked over time.
 
-This would be the place to talk about how solution scripts are
-automatically generated, and the provided utilities that go along with them.
+However, doing this with automatically generated challenges is difficult, and
+is one of the main obstacles (**citation needed**) to deploying a system like
+this in an academic setting. Challenges must all be solvable, and the
+difficulty (by measuring the complexity of the solution) must remain *at least*
+roughly the same, or the marks for the module will be skewed unfairly.
+
+To resolve this, along with automatic challenge synthesis, we provide solution
+script synthesis as part of environment generation. While it would be possible
+to define a single solve script for each specification, that takes into
+consideration all possible randomizations, writing such a script would be
+unneccessarily quite challenging. Instead, we allow templating the script with
+a number of special variables, with values known and derived during the
+synthesis process, which are unavailable to challenge solvers.
+
+These template values include:
+
+- `gen_filename`, the filename of the challenge output
+- `gen_names`, the translated names of blocks and variables
+- `gen_templates`, the instantiated values of templates
+- `gen_var_locations`, locations of variables (extracted from DWARF debugging
+  data), which can be used to calculate exact offsets between variables
+
+These challenge scripts can be run against the produced binaries to check that
+they correctly output a flag - this is actually the same technique we used to
+confirm the validitity of out example specifications.
+
+These solution scripts have a number of uses: they could use to validate
+synthesized challenges as explained above, they could be given as
+individualized example solutions, or they could be used in a production setup
+to continuously test that a challenge continues to work over time, improving
+reliability.
 
 # Results
 
