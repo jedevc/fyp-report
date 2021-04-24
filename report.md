@@ -247,7 +247,10 @@ to the details explained in this section.
 
 The challenge designer can force one of the interpretations, using a block or
 chunk constraint, as explained earlier in **somewhere**. If a constraint has
-not been specified, then an interpretation is randomly selected.
+not been specified, then an interpretation is randomly selected. The only
+exception here is the `main` block, which must always have a function
+interpretation, since it is the entrypoint to the program, and so cannot appear
+inline.
 
 After all blocks and chunk have been assigned an interpretation, we can begin
 to apply those through all statements in the specification. We do this in two
@@ -454,13 +457,21 @@ TODO
 
 In the final stage, having translated all statements and expressions in each
 block correctly, we can now translate the final remaining blocks into
-functions.
+functions. Since all calls have now been removed and replaced with new
+statements, and all variable references have been fixed, all that's left to do
+is to construct the functions themselves.
 
-We can use the already-computed function signatures to construct a list of
-arguments, the rooting information to work out local variables, and the
-transformed contents of the block to form the main body of the function.
+For each block, we can use the already-computed function signatures from
+rooting and lifting to construct a list of arguments and their types. We can
+also determine which local variables need to be assigned to each function so
+that they appear in the right stack frame.
 
-...
+With all functions correctly defined, we can collect them along with all global
+and external variables, into a program object, which represents the end product
+of interpretation. This can then be traversed later during code generation to
+produce fully valid and vulnerable C code!
+
+## Code generation
 
 ## Randomization
 
