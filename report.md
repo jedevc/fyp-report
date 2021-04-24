@@ -59,11 +59,14 @@ finally producing low-level C code as an output.
 The 6 stages are:
 
 - **Parsing** to produce an Abstract Syntax Tree
-- **Type checking**
-- **Translation** to an Abstract Syntax Graph, referred to as the block-chunk graph
+- **Type checking** to sanity check that the Abstract Syntax Tree is somewhat
+  semantically valid
+- **Translation** to an Abstract Syntax Graph, referred to as the block-chunk
+  graph
 - **Interpretation** to remove and transform all blocks
 - **Code generation** to produce final C code
-- Optional **environment construction** to produce binaries and docker containers
+- Optional **environment construction** to produce binaries and docker
+  containers
 
 Aside from these core stages, a number of smaller minor operations and
 debugging steps are also performed in-between them, to provide additional
@@ -190,9 +193,48 @@ utilize libraries.
 
 ## Translation
 
-TODO
+Once the Abstract Syntax Tree has been checked and transformed, we can convert
+it to a higher level representation, the block-chunk graph. In this
+representation, instead of merely representing the low-level syntax of the
+language, we more completely represent the relationships between individual
+blocks and their calls, and chunks and their variables. Whereas in the AST we
+represent calls and variable references simply by using their names, in the
+block-chunk graph, we use actual pointers (or the Python equivalent) to show
+the relationships.
 
-...convert to ASG.
+This has enormous implications in how we can traverse the graph, easily
+allowing defining complex operations such as structural traversals and
+structural maps using recursion and first order functions. This introduced
+complexity allows performing more complex operations such as interpretation,
+described **later**.
+
+To perform the translation process, vulnspec uses a similar visitor pattern to
+during type checking. However, instead of returning a type labelling for each
+node, we return a new node that has been translated. The domain and codomain of
+this transformation are completely separate (except for explicitly labelled
+types), and the nodes used to represent the block-chunk graph are similar but
+unique to the ones in the tree. They are also, in a number of cases, simpler,
+not encoding the complexity of different literal values, and simplifying some
+nodes away into other constructs.
+
+Most nodes have a one-to-one correspondence in the block-chunk graph, however,
+a number of the translations are slightly more complex:
+
+- Exact values are removed, and replaced with string representations, to what
+  they will be output as in C code generation. Interpretation and other later
+  stages don't require knowledge of individual values, so we can simplify it
+  here. As part of this, templates will also be resolved.
+- If statements are unwrapped from their tree-like recursive structure to a
+  sequence which simplifies processing and code generation dramatically.
+- Block splits are removed, and the block is split into two separate blocks,
+  with the first one ending in calling the second. Since the later stages
+  require lots of complex block processing, this simplifies needing to handle
+  more cases.
+- Constraints are resolved from raw string representations to a collection of
+  enumerated values.
+
+Aside from these edge cases, the transformation is relatively straightforward,
+and prepares the internal representation for later stages of processing.
 
 ## Interpretation
 
