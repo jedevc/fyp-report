@@ -110,13 +110,14 @@ during an assignment, the types of both sides are checked against each other
 for compatibility, while an if statement will check that it's condition is
 compatible as a boolean value.
 
-However, because we are aiming for compatibility with the C type system, since we
-are compiling to C, we can't simply create an entirely new type system from
+However, because we are aiming for compatibility with the C type system, since
+we are compiling to C, we can't create an entirely new type system from
 scratch. In fact, due to the fact that the C type system is so complex, and
-built upon decades of historical baggage, it's highly complex nature makes it
-incredibly difficult to replicate perfectly. As a result, we simply create a
-minimal type system model of how C performs it's type checking, relying on
-explicit casts for cases that fall outside of these well-defined realms.
+built upon decades of historical baggage, it's incredibly difficult to
+replicate perfectly, specifically, the implicit type conversion and promotion
+rules. As a result, we simply create a minimal type system model of how C
+performs it's type checking, relying on explicit casts for cases that fall
+outside of these well-defined realms.
 
 The type model can be simply described by defining two kinds of types -
 concrete types, such as an integer `int` or a string `*char`, and abstract
@@ -143,14 +144,16 @@ between pointers, but requires extra thought when trying to perform unsafe
 operations, like downcast from floats to ints, or convert integers back to
 pointers.
 
-Note that the above graph is only a rough approximation of the C type system,
-and could be made a lot more complete with the further distinction between more
-types, such as differently sized types, or signed and unsigned integers, etc.
-Additionally, a couple of checks cannot be expressed by this graph easily - for
-example, assignments to arrays and function types are not permitted, but arrays
-can be passed around as arguments, and this model does not distinguish between
-the two. As a result, there a couple of additional checks to catch out
-exceptional behaviour like that.
+We additionally define a universal meta type, ...
+
+Note that the above graph is only a rough approximation of the C implicit type
+system conversions, and could be made a lot more complete with the further
+distinction between more types, such as differently sized types, or signed and
+unsigned integers, etc. Additionally, a couple of checks cannot be expressed by
+this graph easily:
+
+- Arrays can be passed as arguments, but cannot be assigned to.
+- Functions can never be directly assigned to, or passed around.
 
 ## External library integration
 
