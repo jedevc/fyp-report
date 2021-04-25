@@ -1,0 +1,22 @@
+digraph AST {
+    any -> void;
+    any -> boolean;
+    any -> integral;
+    any -> pointer;
+    any -> floating;
+
+    pointer -> void;
+    pointer -> integral;
+
+    integral -> void;
+    integral -> floating;
+
+    boolean -> void;
+    boolean -> integral;
+
+    floating -> void;
+    floating -> complex;
+
+    complex -> void;
+}
+
