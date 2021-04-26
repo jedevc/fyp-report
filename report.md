@@ -88,9 +88,80 @@ TODO
 
 ## Lexical analysis and parsing
 
-TODO
+To perform any meaningful analysis of the specification, it first needs to be
+parsed into an Abstract Syntax Tree. This process is broken into two pieces,
+lexing and parsing.
 
-- Explain moving through stream -> tokens -> tree -> graph
+To demonstrate, we'll follow an example specification through the parsing pipeline:
+
+```
+chunk x : int = 0
+block main {
+  while x < 10 {
+    printf@libc.stdio("Hello world! %d\n", x)
+    ...
+    x = x + 1
+  }
+}
+```
+
+In the lexing stage, we break up the raw text input into a series of tokens, or
+terminals, of which there are 38 distinct types. The problem of producing a
+series of tokens is trivially broken down into producing a single token at a
+position in the raw stream, and moving the position for the next token to be
+read. Our algorithm then just becomes an iterative algorithm, repeating until
+we reach the end of stream.
+
+At this stage, we specifically only handle any language features that are
+*regular*, those that can be matched by a regular expression, or what we use, a
+Deterministic Finite Automaton. Among the more complex structures that we
+handle are: skipping past comments, parsing strings, defining templates, and
+defining a wide variety of unary and binary operators, many of which have
+similar prefixes. For each individual atomic language feature, we produce a
+token object, containing a type, a possible lexeme (which represents the data
+read), and a position and length of the token (which are pretty-printing error
+messages later if neccessary).
+
+In our example:
+
+```
+<Reserved "chunk">, <Name "x">, <Colon>, <Name "int">, <Assign>, <Integer ["0", 10]>, <Newline>
+<Reserved "block">, <Name "main">, <BraceOpen>, <Newline>
+<Reserved "while">, <Name "x">, <CompareLT>, <Integer ["10", 10]>, <BraceOpen>, <Newline>
+<Name "printf@libc.stdio">, <ParenOpen>, <String "Hello world! %d\n">, <Comma>, <Name "x">, <ParenClose>, <Newline>
+<Ellipsis>, <Newline>
+<Name "x">, <Assign>, <Name "x">, <Plus>, <Integer ["1", 10]>, <Newline>
+<BraceClose>, <Newline>
+<BraceClose>, <Newline>
+<EOF>
+```
+
+In the parsing stage, we read tokens from the stream and attempt to form them
+into nodes of a tree. To do this, we use a recursive-descent parser, which
+expresses terminals in the language by consuming tokens from the token stream,
+and non-terminals as functions which can consume terminals, or call other
+non-terminals. In this way, the structure of the call graph of the parser
+mirrors the structure of the produced AST.
+
+The parser is almost (and initially was) an $LL(k)$ grammar, which allowed the
+parser to be entirely predictive. Unfortunately, because of some of the
+complexity of the language, it's not possible to easily define some of the
+structures in the language entirely predictively and so some backtracking is
+required. For example, when parsing an expression, it may end with an array
+index - so we can attempt to parse that, but it may fail, and so we backtrack
+to before we tried. Similarly, when attempting to parse a statement, there are
+two possiblities, an lvalue on the left of an assignment, or an expression as
+part of an expression statement. There's no way with $k$ steps of lookahead to
+work out which one is which, so we try one, then the other, using backtracking.
+It's certainly possible to reduce the current grammar to an $LL(k)$ one and so
+allow parsing in linear time with predictive parsing, but since most
+specifications are quite small, it felt like an unneccessary optimization, when
+other features needed development.
+graph
+At the end of parsing, we produce an Abstract Syntax Tree for the entire
+specification, which can now be traversed and manipulated in later stages.
+
+![Abstract Syntax Tree diagram](diagrams/parser/graph.svg)
 
 ## Type checking
 
@@ -131,7 +202,7 @@ pointers are used as integers, etc. To help express this, we construct a
 directed meta-type graph, with the vertices as meta-types, and the edges as
 valid implicit conversions:
 
-...**meta graph**...
+![Meta-type graph](diagrams/meta_types/graph.svg){ width=50% }
 
 Then, the question of compability simply becomes one of reachability, i.e. to
 use type $A$ in the context of type $B$, the metatype of $B$ must be reachable
