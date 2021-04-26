@@ -80,6 +80,81 @@ TODO
 - Probably some fancy BNF grammars, (simplified) language specification and list
   of features
 
+A simple annotated EBNF grammar is defined below:
+
+```
+(* a specification is a series of high-level pieces *)
+spec = { piece }
+piece = chunk_piece | block_piece | template_piece
+
+(* a chunk defines variables *)
+chunk_piece = ("extern" | "chunk"), declaration, { ",", declaration }
+declaration = name, ":", type, [ "=", expression ]
+type =
+     | "*", type
+     | "[", (integer | template), "]", type
+     | "fn", "(", args, ")", type
+     | name
+
+(* a block contains statements *)
+block_piece = "block", constraints, scope
+scope = "{", statements, "}"
+statements = { statement }
+
+statement = "..."
+          | while_statement
+          | if_statement
+          | call_statement
+          | assignment
+          | expression
+while_statement = "while", "(", expression, "), scope
+call_statement = "call", name
+if_statement = "if", "(", expression, ")", scope, [ "else", scope | if_statement ]
+assignment = lvalue, "=", expression
+
+(* operations upon expressions *)
+expression = disjunction
+disjunction = conjunction | ( conjunction, "||", disjunction )
+conjunction = comparison | ( comparison, "&&", conjunction )
+comparison = sum | ( sum, ( "!=" | "==" | "<" | "<=" | ">" | ">=" ), sum )
+sum = product | ( product, ( "+" | "-" | "&" | "|" | "^" ), sum )
+product = standalone | ( standalone, ( "*" | "/" ), product )
+standalone = [ "-" | "!" | "~" ], atom
+
+atom = atom', [ "(", args, ")" ], [ "as", type ]
+atom' = "(", lvalue, ")"
+      | "(", expression, ")"
+      | "&", lvalue
+      | "sizeof", "(", type, ")"
+      | "sizeofexpr", "(", expression, ")"
+      | value
+      | lvalue
+
+lvalue = lvalue', [ "[", expression, "]" ]
+lvalue' = "(", lvalue, ")"
+        | "*", atom
+        | "null" | "NULL"
+        | name
+
+args = [ expression, { ",", expression } ]
+
+template_piece = "template", template
+template = "<", name, [ ";", ? python expression ? ], ">"
+
+
+name = alpha_char, { alpha_char | decimal_digit }, ( "@", { alpha_char | decimal_digit | "."} )
+
+value = integer | float | string | boolean | template
+integer = ("0x", hex_digit, { hex_digit })
+        | ("0o", oct_digit, { oct_digit })
+        | ("0b", binary_digit, { binary_digit })
+        | (decimal_digit, { decimal_digit })
+float = decimal_digit, { decimal_digit }, ".", { decimal_digit }
+
+boolean = "true" | "false"
+string = '"', { all_characters - '"' }, '"'
+```
+
 # Implementation
 
 TODO
@@ -679,9 +754,16 @@ derive all the uses of the variable.
 
 All that's left now is to translate each usage capture within the block into a
 new usage capture which correctly uses the new maximal in the function
-signature to get the same value as before.
-
-...
+signature to get the same value as before. To do this, we create an inverted
+usage capture of the maximal which uses the new derived type of the maximal,
+but every operation is inverted, so dereferences become references, etc. This
+inversion essentially represents how one might get from the new maximal to the
+raw value of the variable (however, it's likely nonsensical because it might
+involve refs of refs, and other strange structures). However, we can take this
+inversion, and put into each found usage capture in place of the old one. Then
+we can simplify this new capture, by removing ref and deref pairs. Eventually,
+we derive a new usage capture, which represents the new usage of the variable
+within the signature of the function.
 
 ### Finalization
 
