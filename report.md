@@ -95,13 +95,11 @@ TODO
 ## Type checking
 
 After constructing an Abstract Syntax Tree from the original stream of data, we
-need some way of semantically validating it, to ensure that no mistakes have
-been made by the challenge designer that would somehow cause problems in later
-stages (such as using undeclared variables) or would generate invalid C code
-output (such as declaring variables to be of a non-existant type). We call this
-general process of verification, "type" checking, since the way that we validate
-the tree is mostly made up from the process of comparing various types against
-each other.
+need some way of semantically validating it, to ensure that the challenge
+designer has not made mistakes that would cause problems in later stages (such
+as using undeclared variables) or would generate invalid C code output (such as
+declaring variables to be of a non-existant type). To perform this
+verification on the tree, we use a simple type-checking system.
 
 Essentially, we traverse the tree using a visitor pattern, at each level
 returning a type up to the next level, which can then be checked against other
@@ -115,36 +113,74 @@ we are compiling to C, we can't create an entirely new type system from
 scratch. In fact, due to the fact that the C type system is so complex, and
 built upon decades of historical baggage, it's incredibly difficult to
 replicate perfectly, specifically, the implicit type conversion and promotion
-rules. As a result, we simply create a minimal type system model of how C
-performs it's type checking, relying on explicit casts for cases that fall
-outside of these well-defined realms.
+rules. As a result, we construct a minimal type model of how C performs it's
+checks, and rely on explicit casts for cases that fall outside of more common
+use cases.
 
-The type model can be simply described by defining two kinds of types -
-concrete types, such as an integer `int` or a string `*char`, and abstract
-types, such as `Integral` or `Pointer`, which we call "meta"-types. Between
-these two kinds, we can establish a simple function that maps concrete types
-into their respective abstract types.
+Our type model can be described by defining two kinds of types - concrete
+types, such as an integer `int` or a string `*char`, and abstract types, such
+as `Integral` or `Pointer`, which we call "meta"-types. Between these two
+kinds, we can establish a simple function that maps concrete types into their
+respective abstract types. **more elaboration**
 
-When checking for compatibility between two types, it's not simply sufficient
+When checking for compatibility between two types, it's not sufficient
 to check that a type is identical to another type, like in more strongly-typed
 languages; instead we need to verify that a type can be used in the context of
 another type. For example, in C, integers are effectively used as booleans,
 pointers are used as integers, etc. To help express this, we construct a
 directed meta-type graph, with the vertices as meta-types, and the edges as
-valid usages:
+valid implicit conversions:
 
 ...**meta graph**...
 
 Then, the question of compability simply becomes one of reachability, i.e. to
 use type $A$ in the context of type $B$, the metatype of $B$ must be reachable
 on a path reachable from the metatype of $A$.  Using this, we can define an
-additional technique of type checking, called "fuzzy" typing. This technique
-allows easily type checking adding an integer to a float, and converting
-between pointers, but requires extra thought when trying to perform unsafe
-operations, like downcast from floats to ints, or convert integers back to
-pointers.
+additional notion of type checking, called "fuzzy" typing. This technique
+allows easily checking adding an integer to a float, and converting between
+pointers, but requires extra thought when trying to perform unsafe operations,
+like downcast from floats to ints, or converting integers back to pointers.
 
-We additionally define a universal meta type, ...
+This graph is encoded in the `config.yaml` file for the builtins directory (and
+shortened for succinctness):
+
+```yaml
+...
+core:
+  types:
+    void:
+      - void
+    boolean:
+      - bool
+    integral:
+      - signed char
+      - unsigned char
+      - char
+      # and many more...
+    floating:
+      - float
+      - double
+      - long double
+    complex:
+      - float complex
+      - double complex
+      - long double complex
+    pointer:
+  typemap:
+    boolean: [void, integral]
+    integral: [void, floating]
+    floating: [void, complex]
+    pointer: [void, integral]
+    complex: [void]
+...
+```
+
+Beyond the explicit graph here, we additionally define a universal meta type,
+which skips the reachability check entirely, always returning true; this type
+can be assigned anything and used anywhere. This is the meta type that we use
+for unknown meta types, such as with external library integrations. This type
+isn't notated in the graph, since it's not defined as part of it, but rather as
+an additional concept on top of it.
 
 Note that the above graph is only a rough approximation of the C implicit type
 system conversions, and could be made a lot more complete with the further
