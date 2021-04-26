@@ -653,7 +653,35 @@ which lifts simple variables into more complex l-value expressions, in this
 case changing the function signature to accept a pointer to $a$, which allows
 $y$ to modify the value correctly.
 
-TODO
+To lift a variable, we first recursively find all usages of that variable in a
+block, and detect *how* it is used - for example, if it is dereferenced,
+indexed into, referenced, etc.  Along with all the usual syntax defined
+already, we also use a virtual reference, to refer to the usage of a variable
+as an lvalue, since it requires a reference to the variable, but it still needs
+to be dereferenced to use it, differently from a normal reference. All of these
+instances of uses are all recorded as "usage captures", and collected together.
+
+From the collection of usage captures, we can then determine the *maximal*
+capture, i.e. a capture from which it is possible to derive the values of all
+the other captures. For instance, a pointer to a variable can derive the value
+of that variable, likewise, an array can derive all the values at each of it's
+indices. Specifically, we want to find the *minimum* maximal capture, the
+capture that only just allows derivation of all the other values, and doesn't
+require extraneous access patterns.
+
+...**diagram**..
+
+To derive this maximal capture, we compare two usage captures trees at a time,
+determining at each level what capture is required to allow deriving both of
+the values. If we derive a type from this maximal capture, we can use that in
+the function signature, since it represents the least-broad type needed to
+derive all the uses of the variable.
+
+All that's left now is to translate each usage capture within the block into a
+new usage capture which correctly uses the new maximal in the function
+signature to get the same value as before.
+
+...
 
 ### Finalization
 
