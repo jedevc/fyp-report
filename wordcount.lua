@@ -28,11 +28,11 @@ wordcount = {
   end,
 
   CodeBlock = function(el)
-    _,n = el.text:gsub("%S+","")
-    words = words + n
-    text_nospace = el.text:gsub("%s", "")
-    characters = characters + utf8.len(text_nospace)
-    characters_and_spaces = characters_and_spaces + utf8.len(el.text)
+    -- _,n = el.text:gsub("%S+","")
+    -- words = words + n
+    -- text_nospace = el.text:gsub("%s", "")
+    -- characters = characters + utf8.len(text_nospace)
+    -- characters_and_spaces = characters_and_spaces + utf8.len(el.text)
   end
 }
 
@@ -47,6 +47,7 @@ end
 function Pandoc(el)
     -- skip metadata, just count body:
     pandoc.walk_block(pandoc.Div(el.blocks), wordcount)
+
     print(words .. " words in body")
     print(characters .. " characters in body")
     print(characters_and_spaces .. " characters in body (including spaces)")
