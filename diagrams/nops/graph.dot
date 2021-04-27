@@ -1,0 +1,9 @@
+digraph {
+    x[label="x"]
+    y[label="y"]
+
+    x -> y;
+
+    rankdir=LR;
+}
+

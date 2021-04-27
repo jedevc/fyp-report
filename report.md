@@ -824,7 +824,9 @@ call a pre-defined NOP, and then for that new NOP block to call to the original
 target. Note that at this point, interpretations have not been assigned, so
 these could appear inline, or alternatively, as their own functions.
 
-...**DIAGRAM**...
+![Blocks before NOP insertion](diagrams/nops/graph.svg)
+
+![Blocks after NOP insertion](diagrams/nops/graph2.svg)
 
 All NOPs are defined in the `vulnspec/data/nops/` folder, as individual blocks
 with a `nop` constraint to mark that they should be parsed and be avaiable for
