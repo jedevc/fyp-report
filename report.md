@@ -315,9 +315,15 @@ boolean = "true" | "false"
 
 # Implementation
 
-TODO
+In this chapter, we present how the above design goals and specification is
+implemented to produce the vulnspec synthesis tool. The tool is implemented in
+around 8000 lines of Python code, and includes a lexer and parser written from
+scratch, a minimal type checking system, libc integration, randomization
+procedures and final challenge generation and output.
 
-- Explain all the awesome technical implementation details.
+The structure of this section mirrors the pipeline laid out in the **Stages**
+section above, and moves from the plaintext vulnspec specification to the final
+challenge binaries and environments.
 
 ## Lexical analysis and parsing
 
@@ -941,8 +947,6 @@ and external variables, into a program object, which represents the end product
 of interpretation. This can then be traversed later during code generation to
 produce fully valid and vulnerable C code!
 
-## Code generation
-
 ## Randomization
 
 An important aspect of vulnspec is to allow generating different programs that
@@ -1132,8 +1136,6 @@ As expected, this generates a combination of the results from above:
 | :- | :- |
 | `set`, `teol`, `i`, `o_by`, `st` | `systow10`, `isattroy`, `cog`, `undestach`, `fws` |
 
-TODO: ...the guarantees of this new model.
-
 To generate the probabilities for this model, we use the same primitives for
 extracting Ctags from `libmusl` as the builtin generator. Essentially we
 iterate over each tag, counting the number of times that a $k$-length prefix
@@ -1144,6 +1146,8 @@ To optimize picking from the weighted list, instead of storing the individual
 weight of each possibility, we store the cumulative weight of all possibilities
 so far. This allows us to select randomly from the list using linear search in
 $O(\log n)$ time, instead of the naive linear search which takes $O(n)$.
+
+## Code generation
 
 ## Environments
 
