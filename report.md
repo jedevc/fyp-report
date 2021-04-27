@@ -75,17 +75,162 @@ that exact level of representation.
 
 ## Specification
 
-TODO
+Vulnspec is designed to a minimal programming language that can express
+vulnerabilities. As such, it's syntax mirrors C, however, there are a number of
+high level constructs that C doesn't have.
 
-- Probably some fancy BNF grammars, (simplified) language specification and list
-  of features
+### Blocks and Chunks
+
+Blocks and chunks are the highest level constructs in the specification which
+represent pieces of code and data respectively.
+
+A block is essentially a procedure - additionally, it can't take any arguments
+or return values, it just represents code that is executed.
+
+```
+block foo {
+  // lines of code go here...
+}
+```
+
+Blocks can call each other, forming a call graph. This isn't limited to just a
+directed acyclic graph, blocks can call each other, and form co-recursive
+structures.
+
+```
+block first {
+  puts@libc.stdio("1. execute before call")
+  call second
+  puts@libc.stdio("3. execute after call")
+}
+
+block second {
+  puts@libc.stdio("2. this is in the call")
+}
+```
+
+In scenarios like this one, where a block is only referenced by one other
+block, we can use an implicit block split, with an improvement in readability.
+This results in the exact same block-chunk graph later in the pipeline, as the
+splits are removed are translated into calls directly.
+
+```
+block first {
+  puts@libc.stdio("1. execute before call")
+  ...
+  puts@libc.stdio("2. this is in the call")
+  ...
+  puts@libc.stdio("3. execute after call")
+}
+```
+
+A chunk is a grouped collection of variable declarations. During the process of
+synthesis, vulnspec keeps these variable declarations together, so that they
+are next to each other in memory, in the same order that they are declared in.
+
+```
+chunk x : [64]char,  // if x overflows...
+      y : int        // ...then it overflows into y!
+```
+
+A program can define as many chunks as it likes, although vulnspec only
+guarantees proximity for variables placed into the same chunk.
+
+Additionally, both blocks and chunks can contain a number of constraints, which
+enforce an interpretation, or somehow dictate how vulnspec should treat the
+block or chunk later on through the pipeline.
+
+```
+chunk (global) a : int
+chunk (local) b : int
+chunk (static) c : int
+
+block (inline) f {
+}
+block (func) g {
+}
+```
+
+In the above:
+
+- `a` is forced to be a global variable, and to appear in either the `.data` or
+  `.bss` section of the binary
+- `b` is forced to be a local variable, and to appear as part of a stack frame
+- `c` will be only initialized once, no matter whether it is local or global
+- `f` is forced to be inlined into all blocks that call it
+- `g` is forced to be a separate function, and function called by all blocks
+  that call it
+
+See the **Interpretation** chapter (?) for more information on constraint
+resolution, removal of chunks and blocks, and translation into C-style
+primitives.
+
+### Statements
+
+To actually specify behaviour in the specification, blocks can contain any
+number of statements.
+
+Vulnspec is actually kept fairly minimal in the number of different types of
+statements it offers:
+
+| Statement | Description |
+| :-------- | :---------- |
+| Call | Transfer execution control to another block, and return control to the current block after it finishes. |
+| If | Conditionally execute a series of statements based on a boolean expression. |
+| While | Repeatedly execute a series of statements based on a boolean expression. |
+| Assignment | Assign the value of an expression to an lvalue, such as a variable, dereferenced pointer or array cell. |
+| Expression | Determine the value of an expression, throwing away the result at the end, effectively relying on the side-effects of the expression. |
+
+### Expressions
+
+Expressions are vital to expressing any of the above statements. Essentially an
+expression is a way of combining separate individual raw values and variables
+together to yield a computed result. This result may be `void`, as in the case
+of a statement that only calls a `void` function, but can be any type of value
+that can be defined in the language.
+
+These expressions can be used purely for their side effects, such as with an
+expression statement, or may be stored in an lvalue, a minimal subset of
+expressions that define values that can be assigned to.
+
+At the core of the expressions, we have variables, as well as literal values,
+such as `1` or `"Hello, world"`. All the different types of values available
+are shown in the following table:
+
+| Value type | Description |
+| :--------- | :---------- |
+| `int`      | An integer represented as a series of digits, with a base |
+| `float`    | A floating point number represented as a whole number and a fractional part |
+| `char`     | A single character as an integer in a byte |
+| `string`   | A series of characters |
+| `bool`     | A boolean value, either `true` or `false` |
+| `template` | A value calculated from a python snippet, see the **Template** chapter |
+
+Additionally, we have a special kind of literal value, which are C-literals.
+Because vulnspec is limited in the types of expressions and statements that it
+offers, it may be useful to insert snippets of actual C code into it, for
+example, to call a macro, which are not supported by vulnspec directly.
+
+```
+include "math.h"
+
+block calc {
+  printf@libc.stdio("area of circle with radius 5.0: %f", $(M_PI) * 5.0 * 5.0)
+}
+```
+
+This block uses the `M_PI` value defined in the `math.h` header. Note that in
+this case we have to explicitly include the header, while normally we don't
+have to. For more information, see **External Library Integration**.
+
+### Grammar
 
 A simple annotated EBNF grammar is defined below:
 
 ```
 (* a specification is a series of high-level pieces *)
 spec = { piece }
-piece = chunk_piece | block_piece | template_piece
+piece = chunk_piece | block_piece | template_piece | include_piece
 
 (* a chunk defines variables *)
 chunk_piece = ("extern" | "chunk"), declaration, { ",", declaration }
@@ -95,6 +240,13 @@ type =
      | "[", (integer | template), "]", type
      | "fn", "(", args, ")", type
      | name
+
+(* a template pre-defines templates without inserting values *)
+template_piece = "template", template
+template = "<", name, [ ";", ? python expression ? ], ">"
+
+(* an explicit include requires that a certain header is included *)
+include_piece = "include", string
 
 (* a block contains statements *)
 block_piece = "block", constraints, scope
@@ -106,6 +258,7 @@ statement = "..."
           | if_statement
           | call_statement
           | assignment
+          | literal
           | expression
 while_statement = "while", "(", expression, "), scope
 call_statement = "call", name
@@ -121,6 +274,7 @@ sum = product | ( product, ( "+" | "-" | "&" | "|" | "^" ), sum )
 product = standalone | ( standalone, ( "*" | "/" ), product )
 standalone = [ "-" | "!" | "~" ], atom
 
+(* most basic atomic expression *)
 atom = atom', [ "(", args, ")" ], [ "as", type ]
 atom' = "(", lvalue, ")"
       | "(", expression, ")"
@@ -130,29 +284,33 @@ atom' = "(", lvalue, ")"
       | value
       | lvalue
 
+(* expression that can appear on the left-hand-side of an assignment *)
 lvalue = lvalue', [ "[", expression, "]" ]
 lvalue' = "(", lvalue, ")"
         | "*", atom
         | "null" | "NULL"
         | name
+        | literal
+
+(* core non-terminals *)
+name = alpha_char, { alpha_char | decimal_digit }, ( "@", { alpha_char | decimal_digit | "."} )
+literal = "$", "(", { all_chars - ")" }, ")"
 
 args = [ expression, { ",", expression } ]
 
-template_piece = "template", template
-template = "<", name, [ ";", ? python expression ? ], ">"
-
-
-name = alpha_char, { alpha_char | decimal_digit }, ( "@", { alpha_char | decimal_digit | "."} )
-
-value = integer | float | string | boolean | template
+(* values *)
+value = integer | float | char | string | boolean | template
 integer = ("0x", hex_digit, { hex_digit })
         | ("0o", oct_digit, { oct_digit })
         | ("0b", binary_digit, { binary_digit })
         | (decimal_digit, { decimal_digit })
 float = decimal_digit, { decimal_digit }, ".", { decimal_digit }
-
+char = "#", all_printable_chars ?
+     | "#", '"', all_chars, '"'
+     | "#", "'", all_chars, "'"
+string = '"', { all_chars - '"' }, '"'
+       | "'", { all_chars - "'" }, "'"
 boolean = "true" | "false"
-string = '"', { all_characters - '"' }, '"'
 ```
 
 # Implementation
