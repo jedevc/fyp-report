@@ -1,7 +1,13 @@
 ---
-title: "Final Year Project"
+title: "Vulnerability Specification and Automatic Challenge Design"
 author: "Justin Chadwell"
 date: "2021-03-23"
+
+bibliography: report.bib
+csl: csl/acm-sig-proceedings
+link-citations: true
+
+header-right: "Final Year Project"
 
 toc: true
 toc-own-page: true
@@ -10,6 +16,8 @@ titlepage: true
 titlepage-color: "3C78D8"
 titlepage-text-color: "EEEEEE"
 titlepage-rule-color: "EEEEEE"
+
+listings-no-page-break: true
 ---
 
 # Abstract
@@ -161,9 +169,9 @@ In the above:
 - `g` is forced to be a separate function, and function called by all blocks
   that call it
 
-See the **Interpretation** chapter (?) for more information on constraint
-resolution, removal of chunks and blocks, and translation into C-style
-primitives.
+See **[Interpretation](#interpretation)** for more information on
+constraint resolution, removal of chunks and blocks, and translation into
+C-style primitives.
 
 ### Statements
 
@@ -1327,6 +1335,9 @@ TODO
 TODO
 
 # References
+
+::: {#refs}
+:::
 
 # Appendices
 
