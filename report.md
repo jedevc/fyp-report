@@ -37,7 +37,34 @@ TODO
 
 ## Problem statement
 
-TODO
+The current process for building Capture the Flag competitions specifically in
+the context of binary exploitation and reverse engineering challenges, is
+highly manual, requiring careful and painstaking work to produce interesting,
+different and challenging puzzles. Despite the effort, however, the output of
+this design is often a single challenge binary, with only a single solution.
+
+This binary suffers from a lack of exploitation variety, leading to an
+increased opportunity for CTF players to illegally share solutions. Some
+significant effort has been made to prevent this form of cheating, preventing
+flag-sharing by randomizing flags, and has shown successful results - however,
+some cheating may still go unnoticed, due to the more complex "solve-sharing",
+in which players share detailed writeups or solve scripts with each other,
+allowing them to gain different flags, but using the same technique. We want to
+provide a way to mitigate against this more advanced form of cheating.
+
+Additionally, the binary only represents a single challenge - an interesting
+puzzle can only be solved once, and not over and over again. By introducing a
+high level of random variation into the challenge as part of it's design and
+build process, we can output multiple challenge binaries, with slightly
+different solutions. This allows players to practice a single technique
+multiple times, to enhance understanding of the underlying concepts.
+
+Finally, we want to create an environment for a challenge designer to
+efficiently and easily create new binary challenges, at a higher level than
+manually writing C code. Ideally, such an environment would allow for easy
+construction of vulnerable primitives, such as specifying memory layouts and
+general control flow, while providing a level of abstraction over writing plain
+C code.
 
 ## Related work
 
@@ -214,7 +241,7 @@ are shown in the following table:
 | `char`     | A single character as an integer in a byte |
 | `string`   | A series of characters |
 | `bool`     | A boolean value, either `true` or `false` |
-| `template` | A value calculated from a python snippet, see the **Template** chapter |
+| `template` | A value calculated from a python snippet, see **[Templates](#templates)** |
 
 Additionally, we have a special kind of literal value, which are C-literals.
 Because vulnspec is limited in the types of expressions and statements that it
@@ -231,7 +258,7 @@ block calc {
 
 This block uses the `M_PI` value defined in the `math.h` header. Note that in
 this case we have to explicitly include the header, while normally we don't
-have to. For more information, see **External Library Integration**.
+have to. For more information, see **[External Library Integration](#external-library-integration)**.
 
 ### Grammar
 
