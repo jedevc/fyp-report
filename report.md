@@ -15,9 +15,9 @@ titlepage: true
 logo: uob.eps
 logo-width: 250
 
-titlepage-color: "c94216"
-titlepage-text-color: "EEEEEE"
-titlepage-rule-color: "EEEEEE"
+titlepage-color: "e08060"
+titlepage-text-color: "ffffff"
+titlepage-rule-color: "ffffff"
 
 listings-no-page-break: true
 ---
