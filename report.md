@@ -1,7 +1,7 @@
 ---
 title: "Vulnerability Specification and Automatic Challenge Design"
 author: "Justin Chadwell"
-date: "2021-03-23"
+# date: "2021-03-23"
 
 bibliography: report.bib
 csl: csl/acm-sig-proceedings
@@ -12,8 +12,10 @@ header-right: "Final Year Project"
 toc: true
 toc-own-page: true
 titlepage: true
+logo: uob.eps
+logo-width: 250
 
-titlepage-color: "3C78D8"
+titlepage-color: "c94216"
 titlepage-text-color: "EEEEEE"
 titlepage-rule-color: "EEEEEE"
 
