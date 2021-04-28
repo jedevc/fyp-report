@@ -78,13 +78,56 @@ TODO
 
 # Design
 
-TODO
+To solve the problems above, we present `vulnspec`, a new programming language
+that encodes specifications of vulnerable programs, and command line utility to
+interface with it. As vulnspec shares many similarities with low-level systems
+languages, as it is transpiled to C.
+
+As opposed to other prior work in binary challenge generation, such as AutoCTF [],
+we take a completely new top-down approach, which is inspired by the
+configuration of SecGen [] used to create vulnerable virtual machines. Instead
+of taking working programs and modifying them to contain vulnerabilities, we
+take a vulnerability description and produce a program that contains that
+vulnerability, generating the surrounding context as neccessary.
+
+We take the view that the actual mechanics of the program are less important
+than the vulnerability that the program expresses. This allows a challenge
+designer to focus on creating a specification that details the vulnerabilities,
+without worrying about the surrounding context.
 
 ## Goals
 
-TODO
+The `vulnspec` language and tooling has been built to satisfy a number of
+design goals, that have been criticial in choosing which functionality to
+prioritize building and implementing.
 
-- Explain the current (and original) design goals of the system
+In deciding these goals, we consider three main parties: the challenge
+designer (who creates the challenge), the challenge solver (who solves
+challenges for points or academic marks), and the competition organizer (who
+oversees the process, awards points, and distributes challenges to players).
+
+The challenge creator should be able to:
+
+- Encode stack overflow and format string exploits by detailing
+  abstract memory layouts in the spatial domain.
+- Encode heap exploits and race conditions by defining control flow over the
+  abstract temporal domain.
+- Be able to encode all standard C expressions and statements, either in
+  `vulnspec`, or in C directly.
+
+Then, the challenge solver should:
+
+- Not be able to use their exact solve techniques, such as a script, on a
+  challenge from the same challenge spec, but with a different random seed.
+- Likewise, both challenges should appear visually different, with different
+  program structure, variable names, etc.
+
+Finally, the competition organizer (or in an academic setting, a module lead)
+should be able to:
+
+- Automatically check that generated challenges are solvable.
+- Be able to easily deploy and deliver challenges to players, in some standard
+  form, or as part as a larger system, such as a VM.
 
 ## Stages
 
@@ -1362,6 +1405,9 @@ TODO
 ## Future work
 
 TODO
+
+- Automatic generation of NOPs from known secure code
+- Integration into CTFd
 
 # References
 
