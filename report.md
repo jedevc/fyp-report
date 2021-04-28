@@ -72,10 +72,6 @@ TODO
 
 - What already exists?
 
-## Report Overview
-
-TODO
-
 # Design
 
 To solve the problems above, we present `vulnspec`, a new programming language
@@ -937,10 +933,10 @@ variables and paths, we can create a full picture of all rooted variables and
 the function signatures:
 
 | Block | Parameters | Local variables |
-| :- | :- | :- |
-| $x$ | $()$ | $(a, c, e)$ |
-| $y$ | $(c, e)$ | $(b)$ |
-| $z$ | $(c, e)$ | $(d)$ |
+| :---- | :--------- | :-------------- |
+| $x$   | $()$       | $(a, c, e)$     |
+| $y$   | $(c, e)$   | $(b)$           |
+| $z$   | $(c, e)$   | $(d)$           |
 
 ### Parameter lifting
 
@@ -1190,7 +1186,7 @@ the source content of libc. As the value of $k$ increases, the outputs become
 increasingly similar to the source material, as shown in the following table
 
 | $k$-value | Variables | Functions |
-| :- | :- | :- |
+| :-------- | :-------- | :-------- |
 | 1 | `k`, `rec`, `hufx`, `ignidxt`, `to` | `ndea`, `amsbysll`, `ffalifpy`, `lete_ake`, `strs` |
 | 2 | `n`, `qq2`, `ts`, `b`, `r03` | `ify_wattrl`, `istente`, `inify`, `pthresub`, `xmktimemsgs` |
 | 3 | `tmp`, `tls_tail`, `v5`, `wcs`, `test` | `weak_alias`, `ldir_r`, `sched_secmp`, `ctions_getln`, `isspawn_find` |
@@ -1213,7 +1209,7 @@ select models until we can find the suffix.
 As expected, this generates a combination of the results from above:
 
 | Variables | Functions |
-| :- | :- |
+| :-------- | :-------- |
 | `set`, `teol`, `i`, `o_by`, `st` | `systow10`, `isattroy`, `cog`, `undestach`, `fws` |
 
 To generate the probabilities for this model, we use the same primitives for
@@ -1228,6 +1224,31 @@ so far. This allows us to select randomly from the list using linear search in
 $O(\log n)$ time, instead of the naive linear search which takes $O(n)$.
 
 ## Code generation
+
+With all blocks and chunks constrainted and properly interpreted, and the
+entire Abstract Syntax Graph rewritten into C-style constructs, we can now
+generate C code.
+
+- Iterate over all global variables and externals
+  - Translate types
+- Create function prototypes
+  - Use the generated function signatures created during [Function call reduction](#function-call-reduction)
+- One by one, for each function:
+  - Instantiate local variables
+  - Iterate over all statements
+    - Use C syntax
+    - Translate variables and function names
+      - When finding usages of external libraries, add the respective header include
+- For main specifically:
+  - Add calls to setbuf(stdout, NULL) and setbuf(stderr, NULL)
+  - No signature will have been created for main, but, always define it with
+    argc and argv
+
+Finally, with all the rest of the code produced, we prepend all the required
+headers for the program, as determined during graph traversal. Then the final
+result can be output to a C file. As a final finishing touch, the C code is
+optionally run through `clang-format` (citation), by default, using the webkit
+style to provide a more consistent styling.
 
 ## Environments
 
