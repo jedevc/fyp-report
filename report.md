@@ -20,6 +20,12 @@ titlepage-text-color: "ffffff"
 titlepage-rule-color: "ffffff"
 
 listings-no-page-break: true
+
+header-includes:
+- |
+    ```{=latex}
+    \usepackage{tikz}
+    ```
 ---
 
 # Abstract
@@ -594,10 +600,11 @@ vulnspec specifications. This utility is bundled along with the
 metatype graph from the previous section.
 
 In the `config.yaml` in the builtins directory, in addition to all the fields
-already detailed, we introduce a `libraries` key which specifies information
-relevant to parsing and loading data from as many libraries as we want -
-however, for mostly practical reasons, we only include libc, however, this
-approach could be extended to any number of third-party libraries.
+[already detailed](#type-checking), we introduce a `libraries` key which
+specifies information relevant to parsing and loading data from as many
+libraries as we want - however, for mostly practical reasons, we only include
+libc, however, this approach could be extended to any number of third-party
+libraries.
 
 ```yaml
 ...
@@ -861,27 +868,27 @@ To see the difference in these algorithms, consider the following
 specification, assuming that all chunks are local and all blocks are functions:
 
 ```
-chunk a : int
-chunk b : int
-chunk c : int
-chunk d : int
-chunk e : int
+chunk (local) a : int
+chunk (local) b : int
+chunk (local) c : int
+chunk (local) d : int
+chunk (local) e : int
 
-block x {
+block (func) x {
   a = 0
   e = 4
   call y
   call z
 }
 
-block y {
+block (func) y {
   b = 1
   c = 2
   e = 4
   call z
 }
 
-block z {
+block (func) z {
   c = 2
   d = 3
   e = 4
@@ -940,46 +947,53 @@ the function signatures:
 
 ### Parameter lifting
 
-Unfortunately, the above description only covers half the story - it accurately
-describes how to decide where in memory variables should be located, and how to
-share access to them, however, using only this information, the function
-signatures will be clearly incorrect.
+Unfortunately, while the above algorithm accurately describes how to decide
+where in memory variables should be located, and how to share access to them,
+if we use only this procedure, the function signatures will be clearly
+incorrect.
 
-For example:
+To see this, we present the following example:
 
 ```
-chunk a : int
+chunk (local) a : int
 
-block x {
+block (func) x {
   a = 1
   call y
 }
 
-block y {
+block (func) y {
   a = 2
 }
 ```
 
-Using just the above algorithms, we can deduce that the function signature of
-$y$ should be $\text{fn} \ (\text{int}) \ \text{void}$. However, since $y$
-assigns to the variable $a$, this would only change a copy of $a$, instead of
-the value of $a$ itself. To resolve this, we perform a process of "lifting",
-which lifts simple variables into more complex l-value expressions, in this
-case changing the function signature to accept a pointer to $a$, which allows
-$y$ to modify the value correctly.
+Following the above, we can deduce that the function signature of
+$y$ should be $\text{fn} \ (a : \text{int}) \ \text{void}$. However, since $y$
+assigns to the variable $a$, this would only change a copy of $a$; instead we
+should pass a pointer to $a$, resulting in the signature $\text{fn} \ (a : *\text{int}) \ \text{void}$.
 
-To lift a variable, we first recursively find all usages of that variable in a
-block, and detect *how* it is used - for example, if it is dereferenced,
-indexed into, referenced, etc.  Along with all the usual syntax defined
-already, we also use a virtual reference, to refer to the usage of a variable
-as an lvalue, since it requires a reference to the variable, but it still needs
-to be dereferenced to use it, differently from a normal reference. All of these
-instances of uses are all recorded as "usage captures", and collected together.
+To resolve this, we perform a process of "lifting". This modifies expressions
+from their old patterns of reference that assume a globally accessible
+variable, to a new pattern of reference that properly accesses each variable
+that has been made local by interpretation. In this case, this would change the
+function signature to accept a pointer to $a$, and so allow changing 
+the value correctly.
+
+To lift a variable, we first recursively find all usages of that variable in each
+block, and detect all the ways in *how* it is used, recording these as "usage
+captures", and collecting them for later. These captures record the exact
+pattern of reference, such as if it is addressed (with the address of
+operator), dereferenced, or indexed into, as well as any compound of the above.
+Along with these expression types, we also define an implicit "virtual"
+reference, to refer to the usage of a variable as an lvalue, since it requires
+a reference to the variable, but it still requires dereferencing later,
+differently from a normal reference.
 
 From the collection of usage captures, we can then determine the *maximal*
-capture, i.e. a capture from which it is possible to derive the values of all
-the other captures. For instance, a pointer to a variable can derive the value
-of that variable, likewise, an array can derive all the values at each of it's
+capture for each function block, i.e. a capture from which it is possible to
+derive the values of all the other captures (including the ones in calls to
+other functions). For instance, a pointer to a variable can derive the value of
+that variable, likewise, an array can derive all the values at each of it's
 indices. Specifically, we want to find the *minimum* maximal capture, the
 capture that only just allows derivation of all the other values, and doesn't
 require extraneous access patterns.
@@ -988,22 +1002,40 @@ require extraneous access patterns.
 
 To derive this maximal capture, we compare two usage captures trees at a time,
 determining at each level what capture is required to allow deriving both of
-the values. If we derive a type from this maximal capture, we can use that in
+the values. Then we use this as a first-order function in a *reduce* operation
+to calculate the maximal capture for all the captures. Now, by traversing this
+final computed capture, we derive a type which is the correct type needed in
 the function signature, since it represents the least-broad type needed to
 derive all the uses of the variable.
 
-All that's left now is to translate each usage capture within the block into a
-new usage capture which correctly uses the new maximal in the function
-signature to get the same value as before. To do this, we create an inverted
-usage capture of the maximal which uses the new derived type of the maximal,
-but every operation is inverted, so dereferences become references, etc. This
-inversion essentially represents how one might get from the new maximal to the
-raw value of the variable (however, it's likely nonsensical because it might
-involve refs of refs, and other strange structures). However, we can take this
-inversion, and put into each found usage capture in place of the old one. Then
-we can simplify this new capture, by removing ref and deref pairs. Eventually,
-we derive a new usage capture, which represents the new usage of the variable
-within the signature of the function.
+All that's left now is to translate each usage capture that is contained in
+each block into a new capture which correctly uses the new maximal as a basis
+for deriving the same value and resulting operation as before. To do this, we
+create an inverted usage capture of the maximal which uses the new derived type
+of the maximal, but every individual operation is inverted, so dereferences become
+references, etc. This inversion essentially represents how one might get from
+the new maximal to the raw value of the variable (however, it's likely
+nonsensical because it might involve refs of refs, and other strange
+structures). However, we can take this inversion, and put into each found usage
+capture in place of the old one. Then we can simplify this new capture, by
+removing ref and deref pairs. Eventually, we derive a new usage capture, which
+represents the new usage of the variable within the signature of the function.
+
+\begin{tikzpicture}
+  \draw[thin,gray!40] (-1,-1) grid (4,4);
+  \draw[<->] (-1,0)--(4,0) node[right]{$x$};
+  \draw[<->] (0,-1)--(0,4) node[above]{$y$};
+  \draw[line width=2pt,blue,-stealth](0,0)--(1,3) node[midway]{$\boldsymbol{u}$};
+  \draw[line width=2pt,red,-stealth](0,0)--(3,2) node[midway]{$\boldsymbol{m}$};
+  \draw[line width=2pt,purple,-stealth](3,2)--(1,3) node[midway]{$\boldsymbol{u - m}$};
+\end{tikzpicture}
+
+This can be intuitively understood by interpreting usage captures as a vector
+space - in the following diagram, $u$ is a usage capture, and $m$ is the
+maximal, both computed from the origin (where the variable is globally
+accessible). From this, we want to compute how to get $u$ from the new maximal,
+which is calculated as $u - m$, or the combination of the old usage capture
+with the inverse of the maximal.
 
 ### Finalization
 
