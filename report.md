@@ -1474,10 +1474,38 @@ TODO
 
 ## Future work
 
-TODO
+Unfortunately, due to time constraints, not every possible feature was able to
+make it in to the final result. With more time to complete the project, there
+would be plenty of future opportunities for expanding and improving the
+technique of challenge generation found in this report.
 
-- Automatic generation of NOPs from known secure code
-- Integration into CTFd
+One major area that could use more work would be in the random variation -
+currently, the challenge designer still requires writing context code instead
+of just the vulnerability description. Ideally, more powerful random generation
+could synthesize code into a number of "scenarios", selecting NOPs, interfacing
+"glue" code, and input and output strings based on this scenario. For example,
+scenarios could include a fake network protocol, or a stock checker
+command-line tool, or any common CTF scenario. Vulnerabilities could then be
+integrated into these pre-built scenarios, to provide themed variations.
+
+Another area for improvement is in NOP generation; in the current version, NOPs
+must all be written by hand, and cannot have large side-effects, since those
+influence the effectiveness of solve scripts. One possibility for automatically
+generating NOPs would involve scanning existing codebases for small snippets of
+code and including them, and using symbolic analysis with angr (**citation**)
+to produce automatic solves for those sections. This improvement would lead to
+almost a middle-ground between randomly varying safe codebases, and using a
+pure-specification driven approach, using other codebases for their code as
+well as for their variable and function naming conventions.
+
+Finally, for an approach like this to really take off, it requires integration
+into other pieces of software. While I've already integrated it into a mini
+custom CTF platform for the purpose of gathering data with a survey,
+integration into other widespread platforms such as CTFd (**citation**),
+probably along with some companion software to facilitate challenge and flag
+generation and checking. Additionally, IDE support with syntax checking, and
+error and warning integration with a language server (**citation**) would help
+to improve adoption and usability.
 
 # References
 
@@ -1489,4 +1517,116 @@ TODO
 ## Appendix X (Command line help pages)
 ## Appendix X (Environment configuration options)
 ## Appendix X (Survey)
+
+The survey site was broken into two main pages. Firstly, there was an index
+page with details of the challenge, instructions for how to start solving them,
+as well as downloads for the individualized challenges, and a flag submission
+box to check for correct flags. Secondly, there was a survey page with
+questions and form inputs to record responses.
+
+### Page description
+
+> **Reverse Engineering Challenge Set**
+> 
+> *Justin's Final Year Project*
+> 
+> Heya! As part of my final year project, I'm experimenting with a new
+> technique for designing hacking challenges for educational use.
+> 
+> I'd really appreciate your help! I've designed a simple reverse-engineering
+> challenge, which you can see below, in two parts - by solving each part,
+> you'll get half of a flag (which will fit together to get something in the
+> form FLAG{...}). The binaries are Linux-only ELF binaries, but you don't need
+> Linux to solve them if you don't want!
+> 
+> Once you've solved the challenge (or given up, that's fine too), please
+> complete and submit a short survey of how you found the challenges. All
+> completed survey's will be eligible to win a £10 Amazon voucher / £10 to the
+> UK charity of your choice (I'll plan to give away a prize per 10 people who
+> complete the survey, unless I run out of money, so please share this with as
+> many people as you can!).
+> 
+> If you decide to take part, please don't discuss the challenges with anyone
+> else until you've both submitted the survey - that'll help me get the most
+> accurate results possible!
+>
+> **Tools**
+>
+> To solve these challenges you can use any tools you like! But, if you're
+> unsure of where to get started, try out some of these suggestions!
+>
+> - Ghidra, a reverse-engineering toolset (with all the bells and whistles)
+> - objdump and readelf, standard Linux tools for disassembling and inspecting programs
+> - strace and ltrace, to inspect system and library calls of running programs
+> - GDB, the standard Linux debugger
+>
+> You definitely don't need to use all/any of these tools, but they can be a
+> nice place to start!
+>
+> **The Challenge**the 
+> 
+> There are two parts to the challenge - each part has half of the flag. Once
+> you have each half of the flag, just stick them together and submit it here!
+> 
+> Please download both challenges at the same time!
+> 
+> <Part 1 download link>
+> <Part 2 download link>
+>
+> **Survey**
+>
+> Completing the challenge above will take you straight to the survey, or if you
+> decide to not finish the challenge, you can go straight to the survey.
+> Remember, all completed survey's are elibile in the draw, not just the ones
+> with correct solutions!
+
+### Survey questions
+
+Below are details of all questions asked as part of the survey.
+
+**Contact details**
+
+| Question | Details |
+| :------- | :----- |
+| Name     | Used to contact participant about the survey, and enter them into the prize draw |
+| Email address     | *(same as above)* |
+
+**Experience level**
+
+| Question | Options |
+| :------- | :------ |
+| Highest level of study | Sixth form, First year undergraduate, Second year undergraduate, Final year undergraduate, Year in industry, Masters, PhD, Post-doc |
+| Currently studying at school or university | Yes, No |
+| How much reverse engineering have you done before this? | None at all, A little bit, Quite a bit, Lots and lots |
+
+**Challenge difficulty**
+
+| Question | Options |
+| :------- | :------ |
+| How long did you spend on part 1? | Around 10 minutes, Around 20 minutes, Around 30 minutes, Around 45 minutes, Around an hour, More than an hour |
+| How difficult did you find part 1? | Piece of cake, Easy, Not too easy, not too hard, Pretty hard, Really quite challenging! |
+| How long did you spend on part 2? | *(same options as for part 1)* |
+| How difficult did you find part 2? | *(same options as for part 1)* |
+| Which part was more interesting? | Part 1, Part 2, About the same, Don't know |
+| Would you have found a Part 3 to the challenges interesting? | Yes, No, Don't Know |
+
+**Solution**
+
+| Question | Details |
+| :------- | :------ |
+| Flag solution | Flag solution taken from the flag submission page |
+| What tools did you use to solve the challenge? | Freeform text box to explain solutions |
+
+**Prize draw**
+
+| Question |
+| :------- |
+| Do you want to be included for the prize draw? |
+
+**Submission**
+
+| Question | Details |
+| :------- | :------ |
+| Anything else you want to tell us? | Freeform text box for any additional information |
+| Submit | Button to submit the entire form |
 
