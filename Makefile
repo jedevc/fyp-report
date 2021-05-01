@@ -13,6 +13,6 @@ wordcount:
 clean:
 	rm -f report.pdf
 
-%.pdf: %.md
+%.pdf: %.md %.bib
 	pandoc -s $< -o $@ --from markdown --template eisvogel --listings --number-sections --citeproc
 

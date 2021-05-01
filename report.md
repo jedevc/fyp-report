@@ -74,28 +74,63 @@ C code.
 
 ## Related work
 
-TODO
+The area of automatic CTF challenge generation, despite being fairly
+under-explored, mostly due to only a recent interest in it, has a number of
+interesting pieces of work in the field, many of which we draw inspiration
+from.
 
-- What already exists?
+The beginning of interest in automatic challenge generation seems to have begun
+with the 2014 edition of PicoCTF [@apg], where challenges were randomly
+templated to produce different challenges for different teams, reducing the
+ability of those teams to share flags and solutions. This was effective
+throughout the competition, and allowed greater insight into who was cheating,
+how they were doing it, and the source of the leak.
+
+AutoCTF [@autoctf], a weeklong event using challenges built using the LAVA bug
+injection system [@autoctf-lava] is one of the main and most popular instances
+of automatic challenge generation. Their findings included that such a tool
+could be (and was) used to massively reduce competition overhead and cost of
+development, and generate a wide variety of new challenges. However, because
+the system was built as bug-injection, automatically ensuring that the results
+were exploitable, or determining exactly the type of exploit that would be
+required is more complex to pin down.
+
+Contrasting with this bug-injection approach, we have specification-based
+challenge generation, such as SecGen [@secgen], which generate fully fledged
+exploitable virtual machines, and create escalation pathways inside. Instead of
+varying correct code, and well-configured services, templates are used to vary
+the content of each VM, to ensure that each student/player receives a different
+setup. Additionally, these challenges are themed, providing a consistent
+"feeling" to each VM, emphasising the importance of visual similarity.
+
+Finally, Blinker [@blinker] creates randomized binary challenges using ERB ruby
+templating of source files and LLVM integration to provide variation at the
+binary level, and uses these tools in a CTF competition to evaluate it's
+success. In particular, this technique has inspired our work, however, the
+exact direction is quite different.
 
 # Design
 
-To solve the problems above, we present `vulnspec`, a new programming language
-that encodes specifications of vulnerable programs, and command line utility to
-interface with it. As vulnspec shares many similarities with low-level systems
-languages, as it is transpiled to C.
+To solve the problems detailed above, and inspired by existing work, we present
+`vulnspec`, a new programming language that encodes specifications of
+vulnerable programs, and command line utility to interface with it. Vulnspec
+shares many similarities with low-level systems languages, as it is transpiled
+to C.
 
-As opposed to other prior work in binary challenge generation, such as AutoCTF [],
-we take a completely new top-down approach, which is inspired by the
-configuration of SecGen [] used to create vulnerable virtual machines. Instead
-of taking working programs and modifying them to contain vulnerabilities, we
-take a vulnerability description and produce a program that contains that
-vulnerability, generating the surrounding context as neccessary.
+As opposed to other prior work in binary challenge generation, such as AutoCTF
+[@autoctf], we take a top-down approach, which is inspired by the configuration
+of SecGen [@secgen] and Blinker [@blinker]. Instead of taking working programs
+and modifying them to contain vulnerabilities, we take a vulnerability
+description and produce a program that contains that vulnerability, generating
+the surrounding context as neccessary.
 
 We take the view that the actual mechanics of the program are less important
 than the vulnerability that the program expresses. This allows a challenge
 designer to focus on creating a specification that details the vulnerabilities,
-without worrying about the surrounding context.
+without worrying about the surrounding context. Specifically, we extend the
+idea of templating to produce our own domain-specific language that transpiles
+to C, and focus on creating variation within the control flow graph and
+variable layouts, which make up the most complexity in creating exploits.
 
 ## Goals
 
@@ -252,8 +287,8 @@ C-style primitives.
 To actually specify behaviour in the specification, blocks can contain any
 number of statements.
 
-Vulnspec is actually kept fairly minimal in the number of different types of
-statements it offers:
+Vulnspec is kept fairly minimal in the number of different types of statements
+it offers:
 
 | Statement | Description |
 | :-------- | :---------- |
@@ -307,7 +342,11 @@ have to. For more information, see **[External Library Integration](#external-li
 
 ### Grammar
 
-A simple annotated EBNF grammar is defined below:
+An annotated simplified EBNF grammar is defined below.
+
+This grammar isn't quite complete, mostly for simplicity, and ignores
+whitespace, as well as newlines, as well as a couple of other minor constructs
+and hacks used to optimize and clarify the implementation of the parser.
 
 ```
 (* a specification is a series of high-level pieces *)
@@ -1296,8 +1335,8 @@ generate C code.
 Finally, with all the rest of the code produced, we prepend all the required
 headers for the program, as determined during graph traversal. Then the final
 result can be output to a C file. As a final finishing touch, the C code is
-optionally run through `clang-format` (citation), by default, using the webkit
-style to provide a more consistent styling.
+optionally run through `clang-format` [@clang-format], by default, using the
+webkit style to provide a more consistent styling.
 
 ## Environments
 
@@ -1479,7 +1518,7 @@ make it in to the final result. With more time to complete the project, there
 would be plenty of future opportunities for expanding and improving the
 technique of challenge generation found in this report.
 
-One major area that could use more work would be in the random variation -
+One major area that could use more work would be in the random variation of theming -
 currently, the challenge designer still requires writing context code instead
 of just the vulnerability description. Ideally, more powerful random generation
 could synthesize code into a number of "scenarios", selecting NOPs, interfacing
@@ -1488,11 +1527,18 @@ scenarios could include a fake network protocol, or a stock checker
 command-line tool, or any common CTF scenario. Vulnerabilities could then be
 integrated into these pre-built scenarios, to provide themed variations.
 
+To further improve the random variation of challenges, it would be nice to
+integrate the LLVM patches built as part of Blinker [@blinker] to produce more
+binary-level variations such as randomizing table orders, function layouts and
+exact instructions and registers used to perform operations. This would work
+well as a third layer in the process, as binary-level randomization after
+source-level randomization.
+
 Another area for improvement is in NOP generation; in the current version, NOPs
 must all be written by hand, and cannot have large side-effects, since those
 influence the effectiveness of solve scripts. One possibility for automatically
 generating NOPs would involve scanning existing codebases for small snippets of
-code and including them, and using symbolic analysis with angr (**citation**)
+code and including them, and using symbolic analysis with angr [@angr-paper]
 to produce automatic solves for those sections. This improvement would lead to
 almost a middle-ground between randomly varying safe codebases, and using a
 pure-specification driven approach, using other codebases for their code as
@@ -1501,10 +1547,10 @@ well as for their variable and function naming conventions.
 Finally, for an approach like this to really take off, it requires integration
 into other pieces of software. While I've already integrated it into a mini
 custom CTF platform for the purpose of gathering data with a survey,
-integration into other widespread platforms such as CTFd (**citation**),
+integration into other widespread platforms such as CTFd [@ctfd],
 probably along with some companion software to facilitate challenge and flag
 generation and checking. Additionally, IDE support with syntax checking, and
-error and warning integration with a language server (**citation**) would help
+error and warning integration with a language server [@language-server-protocol] would help
 to improve adoption and usability.
 
 # References
