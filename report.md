@@ -26,6 +26,12 @@ header-includes:
     ```{=latex}
     \usepackage{tikz}
     ```
+- |
+    ```{=latex}
+    \hypersetup{colorlinks=false,
+                allbordercolors={0.88 0.5 0.38},
+                pdfborder={0 0 1}}
+    ```
 ---
 
 # Abstract
@@ -112,36 +118,27 @@ exact direction is quite different.
 # Design
 
 To solve the problems detailed above, and inspired by existing work, we present
-`vulnspec`, a new programming language that encodes specifications of
-vulnerable programs, and command line utility to interface with it. Vulnspec
-shares many similarities with low-level systems languages, as it is transpiled
-to C.
+`vulnspec`, a new domain-specific programming language that encodes
+specifications of vulnerable programs. Vulnspec can be interfaced with using a
+flexible command line interface, or using a Python API, producing C code,
+binaries and environments ready for players to solve.
 
-As opposed to other prior work in binary challenge generation, such as AutoCTF
-[@autoctf], we take a top-down approach, which is inspired by the configuration
-of SecGen [@secgen] and Blinker [@blinker]. Instead of taking working programs
-and modifying them to contain vulnerabilities, we take a vulnerability
-description and produce a program that contains that vulnerability, generating
-the surrounding context as neccessary.
-
-We take the view that the actual mechanics of the program are less important
-than the vulnerability that the program expresses. This allows a challenge
-designer to focus on creating a specification that details the vulnerabilities,
-without worrying about the surrounding context. Specifically, we extend the
-idea of templating to produce our own domain-specific language that transpiles
-to C, and focus on creating variation within the control flow graph and
-variable layouts, which make up the most complexity in creating exploits.
+We take a top-down approach, which is inspired by the configuration of SecGen
+and Blinker. Instead of taking working programs and modifying them to contain
+vulnerabilities (like AutoCTF), we take a vulnerability description and produce
+a program that contains that vulnerability, introducing variation and context
+around it. Specifically, we extend the idea of simple templating to produce our
+own language that transpiles to C, and focus on creating variation within the
+control flow graph and variable layouts, which make up the most complexity in
+designing exploitable challenges.
 
 ## Goals
 
 The `vulnspec` language and tooling has been built to satisfy a number of
 design goals, that have been criticial in choosing which functionality to
-prioritize building and implementing.
-
-In deciding these goals, we consider three main parties: the challenge
-designer (who creates the challenge), the challenge solver (who solves
-challenges for points or academic marks), and the competition organizer (who
-oversees the process, awards points, and distributes challenges to players).
+prioritize building and implementing. In these goals, we consider three main
+parties: the challenge designer, the challenge solver, and the competition
+organizer.
 
 The challenge creator should be able to:
 
@@ -159,8 +156,8 @@ Then, the challenge solver should:
 - Likewise, both challenges should appear visually different, with different
   program structure, variable names, etc.
 
-Finally, the competition organizer (or in an academic setting, a module lead)
-should be able to:
+Finally, the competition organizer (or in an academic setting, the module
+leader) should be able to:
 
 - Automatically check that generated challenges are solvable.
 - Be able to easily deploy and deliver challenges to players, in some standard
@@ -168,21 +165,20 @@ should be able to:
 
 ## Stages
 
-To go from the raw text specification to final artifacts, we move through a
-number of discrete stages of processing. These stages move from a low-level
-representation of the specification, to a high-level, programmatic view,
-finally producing low-level C code as an output.
+To translate from the raw text specification into binary artifacts, we move
+through a number of discrete stages of processing. These stages move from a
+low-level representation of the specification, to a high-level, programmatic
+view, finally producing low-level C code as an output.
 
-The 6 stages are:
+These stages are:
 
-- **Parsing** to produce an Abstract Syntax Tree
-- **Type checking** to sanity check that the Abstract Syntax Tree is somewhat
-  semantically valid
-- **Translation** to an Abstract Syntax Graph, referred to as the block-chunk
+- [**Parsing**](#lexical-analysis-and-parsing) to produce an Abstract Syntax Tree
+- [**Type checking**](#type-checking) to sanity check the Abstract Syntax Tree's semantic validity
+- [**Translation**](#translation) to an Abstract Syntax Graph, referred to as the block-chunk
   graph
-- **Interpretation** to remove and transform all blocks
-- **Code generation** to produce final C code
-- Optional **environment construction** to produce binaries and docker
+- [**Interpretation**](#interpretation) to transform and remove all blocks and chunks
+- [**Code generation**](#code-generation) to produce code in the target output language
+- Optional [**environment construction**](#environments) to produce binaries and docker
   containers
 
 Aside from these core stages, a number of smaller minor operations and
