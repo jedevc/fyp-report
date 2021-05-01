@@ -1495,9 +1495,30 @@ reliability.
 
 # Results
 
-TODO
+To judge the success of the project, and the validity of the overall design
+goals, we designed a small reverse-engineering challenge using vulnspec, and
+attached it to a small player survey to evaluate the challenges, what they
+thought of them, and how much they had learned from them.
 
-No clue exactly what these will be yet.
+To do this, we created two parts to the challenge - the specification for each
+part was identical, except for minor variations in the flag generation
+templates. Each challenge part reveals half of the flag, which are concatenated
+together to produce the full flag. The specifications for these are listed in
+[Appendix X](#appendix-x), along with the full contents of the survey, and are
+also present in the `examples/server/` directory in the codebase.
+
+To properly randomize these challenges, and collect results from the survey, we
+built a small dockerized web application to use the `vulnspec` library to
+synthesize and build individualized challenges for each user based on a
+randomly generated user id stored as cookie. Additionally, the web app collects
+survey responses, and saves them to a PostgreSQL database, which is managed and
+interfaced with using a Directus dashboard.
+
+The challenges and survey were open for a little over a week, and throughout
+it's duration collected X responses. While obviously insufficient to draw
+strong conclusions, there are some clear trends in the data.
+
+...
 
 # Conclusion
 
@@ -1564,13 +1585,77 @@ to improve adoption and usability.
 ## Appendix X (Environment configuration options)
 ## Appendix X (Survey)
 
-The survey site was broken into two main pages. Firstly, there was an index
-page with details of the challenge, instructions for how to start solving them,
-as well as downloads for the individualized challenges, and a flag submission
-box to check for correct flags. Secondly, there was a survey page with
-questions and form inputs to record responses.
+This appendix is broken into three sections, the specification of the
+reverse-engineering challenge itself, the index page with details of the
+challenges and the survey, and the survey page that collected user-responses.
 
-### Page description
+### Challenge
+
+The basic reverse-engineering challenge that was created was a simple XOR-based
+challenge. There were multiple possible intended solutions for the challenge,
+for example, by manually inspecting the disassembled/decompiled binary, or by
+using GDB or ltrace/strace to dynamically step through the code.
+
+The challenge is intentionally simplistic, to encourage more responses from
+those unfamiliar with CTF challenges.
+
+```python
+# 0.spec
+template <base; random.Random(seed).randint(10000, 99999)>
+
+template <flag1; "FLAG{" + str(base) + "">
+template <flag2; "_" + str(base * 2 + 42) + "}">
+template <flag1len; len(flag1)>
+template <flag2len; len(flag2)>
+
+template <keyrep; 4>
+template <key; ''.join(random.choice(string.ascii_lowercase) for i in range(keyrep)) * (flag1len // keyrep + 1)>
+
+template <flagt; ''.join(chr(ord(ch) ^ ord(k)) for ch, k in zip(flag1, key))>
+template <flagtlen; len(flagt)>
+
+chunk i : int
+chunk key : [<keylen; len(key)>]char = <key>
+chunk flag : [<flagtlen>]char = <flagt>
+
+chunk fd : *FILE@libc.stdio = null
+
+block main {
+    ...
+
+    puts@libc.stdio("I'm going to make a flag.")
+    call makeflag
+
+    ...
+
+    sleep@libc.unistd(2)
+
+    ...
+    
+    fd = fopen@libc.stdio("/dev/null", "w")
+    fwrite@libc.stdio(flag, sizeof(char), <flagtlen>, fd)
+    fclose@libc.stdio(fd)
+    puts@libc.stdio("Wait, I've lost it!")
+
+    ...
+}
+
+block makeflag {
+    i = 0
+    while i < <flagtlen> {
+        flag[i] = flag[i] ^ key[i]
+        i = i + 1
+    }
+}
+```
+
+To check that flags are valid, and prevent invalid submissions, we check that
+in the flag `FLAG{m_n}`, where `m` and `n` are integers, that `n = 2 * m + 42`.
+Because the specification is hidden to players, they would have to generate a
+number of challenges multiple times to extract the technique by which this
+checksum is calculated.
+
+### Index page
 
 > **Reverse Engineering Challenge Set**
 > 
