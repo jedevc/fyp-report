@@ -996,11 +996,23 @@ other functions). For instance, a pointer to a variable can derive the value of
 that variable, likewise, an array can derive all the values at each of it's
 indices. Specifically, we want to find the *minimum* maximal capture, the
 capture that only just allows derivation of all the other values, and doesn't
-require extraneous access patterns.
+require extraneous access patterns. In Figure \ref{fig:lift}, we can see that
+the outermost items are able to derive the innermost items using common
+operators.
 
-...**diagram**..
+\begin{figure}
+  \begin{tikzpicture}
+    \draw (1cm,1cm) rectangle (3cm, 3cm) node[midway]{$*x$};
+    \draw (1cm,3.5cm) rectangle (3cm, 5.5cm) node[midway]{$x[\mathtt{idx}]$};
+    \draw (-1cm,0.5cm) rectangle (3.5cm, 6cm) node[midway, xshift=-1.5cm]{$x$};
+    \draw (-3cm,0cm) rectangle (4cm, 6.5cm) node[midway, xshift=-2.5cm]{$\&x$};
+  \end{tikzpicture}
+  \centering
+  \caption{Lifting set diagram}
+  \label{fig:lift}
+\end{figure}
 
-To derive this maximal capture, we compare two usage captures trees at a time,
+To derive the maximal capture, we compare two usage captures trees at a time,
 determining at each level what capture is required to allow deriving both of
 the values. Then we use this as a first-order function in a *reduce* operation
 to calculate the maximal capture for all the captures. Now, by traversing this
@@ -1021,21 +1033,26 @@ capture in place of the old one. Then we can simplify this new capture, by
 removing ref and deref pairs. Eventually, we derive a new usage capture, which
 represents the new usage of the variable within the signature of the function.
 
-\begin{tikzpicture}
-  \draw[thin,gray!40] (-1,-1) grid (4,4);
-  \draw[<->] (-1,0)--(4,0) node[right]{$x$};
-  \draw[<->] (0,-1)--(0,4) node[above]{$y$};
-  \draw[line width=2pt,blue,-stealth](0,0)--(1,3) node[midway]{$\boldsymbol{u}$};
-  \draw[line width=2pt,red,-stealth](0,0)--(3,2) node[midway]{$\boldsymbol{m}$};
-  \draw[line width=2pt,purple,-stealth](3,2)--(1,3) node[midway]{$\boldsymbol{u - m}$};
-\end{tikzpicture}
+\begin{figure}
+  \begin{tikzpicture}
+    \draw[thin,gray!40] (-1,-1) grid (4,4);
+    \draw[<->] (-1,0)--(4,0) node[right]{$x$};
+    \draw[<->] (0,-1)--(0,4) node[above]{$y$};
+    \draw[line width=2pt,blue,-stealth](0,0)--(1,3) node[midway, anchor=south east]{$\boldsymbol{u}$};
+    \draw[line width=2pt,red,-stealth](0,0)--(3,2) node[midway, anchor=north west]{$\boldsymbol{m}$};
+    \draw[line width=2pt,purple,-stealth](3,2)--(1,3) node[midway, anchor=south west]{$\boldsymbol{u - m}$};
+  \end{tikzpicture}
+  \centering
+  \caption{Vector space transformation of usage captures}
+  \label{fig:lift-vecspace}
+\end{figure}
 
 This can be intuitively understood by interpreting usage captures as a vector
-space - in the following diagram, $u$ is a usage capture, and $m$ is the
-maximal, both computed from the origin (where the variable is globally
-accessible). From this, we want to compute how to get $u$ from the new maximal,
-which is calculated as $u - m$, or the combination of the old usage capture
-with the inverse of the maximal.
+space as in Figure \ref{fig:lift-vecspace}. In this diagram, $u$ is a usage
+capture, and $m$ is the maximal, both computed from the origin (where the
+variable is globally accessible). From this, we want to compute how to get $u$
+from the new maximal, which is calculated as $u - m$, or the combination of the
+old usage capture with the inverse of the maximal.
 
 ### Finalization
 
