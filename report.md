@@ -5,6 +5,19 @@ subauthor: 1872745
 supervisor: "David Oswald"
 wordcount: 9999
 
+abstract: |
+  Capture the Flag competitions are rapidly increasing in popularity as a
+  method for learning about cybersecurity, however, running these competitions
+  is time-consuming and difficult to manage, due to the need to produce new and
+  interesting challenges.
+
+  In this report, we present a Domain-Specific Programming language for rapidly
+  designing and producing randomized C-based reverse-engineering and pwnable
+  challenges. We also introduce a new technique for automatically varying the
+  semantic structure of specifications, over both the spatial domain of memory
+  and the temporal domain of the call flow graph.
+
+
 bibliography: report.bib
 csl: csl/acm-sig-proceedings
 link-citations: true
@@ -37,10 +50,6 @@ header-includes:
                 pdfborder={0 0 1}}
     ```
 ---
-
-\begin{abstract}
-  TODO this is an abstract
-\end{abstract}
 
 # Introduction
 
