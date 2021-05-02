@@ -1,9 +1,6 @@
-.PHONY: all build install clean
+.PHONY: all build clean
 
 all: build
-
-install:
-	cp templates/eisvogel/eisvogel.tex ~/.pandoc/templates/eisvogel.latex
 
 build: report.pdf
 
@@ -14,5 +11,5 @@ clean:
 	rm -f report.pdf
 
 %.pdf: %.md %.bib
-	pandoc -s $< -o $@ --from markdown --template eisvogel --listings --number-sections --citeproc
+	pandoc -s $< -o $@ --from markdown --template vendor/eisvogel/eisvogel.tex --listings --number-sections --citeproc
 
