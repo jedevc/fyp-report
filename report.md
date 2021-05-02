@@ -1,7 +1,9 @@
 ---
 title: "Vulnerability Specification and Automatic Challenge Design"
-author: "Justin Chadwell"
-# date: "2021-03-23"
+author: ["Justin Chadwell"]
+subauthor: 1872745
+supervisor: "David Oswald"
+wordcount: 9999
 
 bibliography: report.bib
 csl: csl/acm-sig-proceedings
@@ -13,7 +15,9 @@ toc: true
 toc-own-page: true
 titlepage: true
 logo: uob.eps
-logo-width: 250
+logo-width: 250pt
+
+degree: Computer Science BSc
 
 titlepage-color: "e08060"
 titlepage-text-color: "ffffff"
@@ -34,9 +38,9 @@ header-includes:
     ```
 ---
 
-# Abstract
-
-TODO
+\begin{abstract}
+  TODO this is an abstract
+\end{abstract}
 
 # Introduction
 

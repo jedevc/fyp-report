@@ -3,7 +3,7 @@
 all: build
 
 install:
-	cp templates/eisvogel/eisvogel.tex ~/.pandoc/templates/
+	cp templates/eisvogel/eisvogel.tex ~/.pandoc/templates/eisvogel.latex
 
 build: report.pdf
 
