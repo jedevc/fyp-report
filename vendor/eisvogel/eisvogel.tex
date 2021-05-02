@@ -916,28 +916,62 @@ $if(titlepage-background)$
   \setstretch{2}
   \vfill
   \vskip -8em
+
   \noindent {\huge \textbf{\textsf{$title$}}}
   $if(subtitle)$
   \vskip 1em
   {\Large \textsf{$subtitle$}}
   $endif$
+
   \vskip 2em
   \noindent {\Large \textsf{$for(author)$$author$$sep$, $endfor$} \vskip 0.6em \textsf{$date$}}
+  $if(subauthor)$
+  {\Large \textsf{($subauthor$)}}
+  $endif$
+  $if(supervisor)$
+  \vskip 0.25em
+  {\Large \textsf{Supervised by \textbf{$supervisor$}}}
+  $endif$
+
+  $if(wordcount)$
+  {\large \textsf{Word count: $wordcount$}}
+  $endif$
+
   \vfill
 }
 $else$
 {
   \setstretch{1.4}
   \vfill
+
   \noindent {\huge \textbf{\textsf{$title$}}}
   $if(subtitle)$
   \vskip 1em
   {\Large \textsf{$subtitle$}}
   $endif$
+
   \vskip 2em
-  \noindent {\Large \textsf{$for(author)$$author$$sep$, $endfor$}}
+  \noindent {\Large \textsf{By \textbf{$for(author)$$author$$sep$, $endfor$}}}
+  $if(subauthor)$
+  \hskip 0.5em
+  {\Large \textsf{($subauthor$)}}
+  $endif$
+  $if(supervisor)$
+  \vskip 0.25em
+  {\Large \textsf{Supervised by \textbf{$supervisor$}}}
+  $endif$
+
+  $if(wordcount)$
+  {\large \textsf{Word count: $wordcount$}}
+  $endif$
+
   \vfill
 }
+$endif$
+
+$if(degree)$
+{\Large \textsf{$degree$}}
+\vskip 1em
 $endif$
 
 $if(logo)$
@@ -947,7 +981,9 @@ $endif$
 
 $if(titlepage-background)$
 $else$
+$if(date)$
 \textsf{$date$}
+$endif$
 $endif$
 \end{flushleft}
 \end{titlepage}
