@@ -17,7 +17,6 @@ abstract: |
   semantic structure of specifications, over both the spatial domain of memory
   and the temporal domain of the call flow graph.
 
-
 bibliography: report.bib
 csl: csl/acm-sig-proceedings
 link-citations: true
@@ -53,43 +52,73 @@ header-includes:
 
 # Introduction
 
-TODO
+... explaining CTFs
 
-- Explain context of CTF competitions
-- Explain automatic flag generation
-- Explain the broad strokes design and differences of this approach to other
-  approaches
+Additionally, the academic use of jeopardy-style CTFs in learning environments
+has been extensively recognized, with inter-university competitions such as C2C
+[@c2c], Inter-Ace [@interace] and it's many spiritual successors such as HECC
+[@hecc], attracting a wide-array of industry sponsorship and interest including
+from government institutions. CTFs have also seen use in classroom settings,
+both at the undergraduate level with exercises and assignments gamified such as
+with the University of Birmingham's security module [@bham-vm2], and secondary
+school level with NCSC-supported programs such as CyberFirst [@cyberfirst].
+
+However, while CTFs have become more and more widespread, few innovations have
+changed how they are fundamentally run - while a number of software platforms
+for hosting scoreboard software have been developed, very little effort has
+been made to standardize the process by which challenges are developed and
+hosted. This means that for every CTF, challenges must be painstakingly
+developed one-by-one, with little ability to reuse challenges from previous
+competitions. Cheating in the form of "flag-sharing" has also become an
+increasing cause for concern, with this allowing teams to gain unfair
+advantages, or students to plagarize results, while remaining difficult to
+detect by organizers.
+
+One approach taken by many competitions is to introduce flag randomization, so
+that flags valid for one team/individual are not valid for others. Recent
+innovations have led to the extension of this approach to introduce random
+variation into the structure of the challenges themselves, so that each team
+receives it's own unique copy of the challenge, and challenges can even be
+reused between yearly competitions.
+
+In this report, we present our take on challenge randomization, specifically in
+relation to binary-focused challenges. We introduce `vulnspec`, a
+Domain-Specific programming language with the ability to easily encode
+vulnerabilities and functionality for powerful memory layout and control flow
+graph randomization and manipulation. We explain both the design and
+implementation decisions as well as the technical details of our approach, and
+evaluate our success using a mini-CTF and survey to get player's opinions of
+the generated challenges.
 
 ## Problem statement
 
-The current process for building Capture the Flag competitions specifically in
-the context of binary exploitation and reverse engineering challenges, is
-highly manual, requiring careful and painstaking work to produce interesting,
-different and challenging puzzles. Despite the effort, however, the output of
-this design is often a single challenge binary, with only a single solution.
+As previously stated, the current process for building Capture the Flag
+competitions is highly manual, requiring careful and complex work to produce
+interesting, different and challenging puzzles. Despite the effort, however,
+the output of this design is often a single challenge binary, with only a
+single solution.
 
-This binary suffers from a lack of exploitation variety, leading to an
-increased opportunity for CTF players to illegally share solutions. Some
-significant effort has been made to prevent this form of cheating, preventing
-flag-sharing by randomizing flags, and has shown successful results - however,
-some cheating may still go unnoticed, due to the more complex "solve-sharing",
-in which players share detailed writeups or solve scripts with each other,
-allowing them to gain different flags, but using the same technique. We want to
-provide a way to mitigate against this more advanced form of cheating.
+This binary suffers from a lack of exploit variety, leading to an increased
+opportunity for CTF players to illegally share solutions. Some significant
+effort has been made to prevent this form of cheating, preventing flag-sharing
+by randomizing flags, and has shown successful results - however, some cheating
+may still go unnoticed, due to the more complex "solve-sharing", in which
+players share detailed writeups or solve scripts with each other, allowing them
+to gain different flags, but using the same technique. We want to provide a way
+to mitigate against this more advanced form of cheating.
 
 Additionally, the binary only represents a single challenge - an interesting
-puzzle can only be solved once, and not over and over again. By introducing a
-high level of random variation into the challenge as part of it's design and
-build process, we can output multiple challenge binaries, with slightly
-different solutions. This allows players to practice a single technique
-multiple times, to enhance understanding of the underlying concepts.
+puzzle can only be solved once, and not over and over again. We want to
+introduce random variation into the challenge as part of it's design and build
+process, so that we can output multiple challenge binaries, with different
+solutions. This allows players to practice a single technique multiple times,
+to enhance understanding of the underlying concepts.
 
-Finally, we want to create an environment for a challenge designer to
-efficiently and easily create new binary challenges, at a higher level than
-manually writing C code. Ideally, such an environment would allow for easy
-construction of vulnerable primitives, such as specifying memory layouts and
-general control flow, while providing a level of abstraction over writing plain
-C code.
+Finally, we want to create an environment for a challenge designer to easily
+and efficiently create new binary challenges, at a higher level than manually
+writing C code. Ideally, such an environment would allow for easy construction
+of vulnerable primitives, such as specifying memory layouts and general control
+flow, while providing a level of abstraction over writing plain C code.
 
 ## Related work
 
