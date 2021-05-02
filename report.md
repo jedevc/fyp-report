@@ -14,7 +14,7 @@ header-right: "Final Year Project"
 toc: true
 toc-own-page: true
 titlepage: true
-logo: uob.eps
+logo: assets/uob.eps
 logo-width: 250pt
 
 degree: Computer Science BSc
@@ -521,7 +521,7 @@ graph
 At the end of parsing, we produce an Abstract Syntax Tree for the entire
 specification, which can now be traversed and manipulated in later stages.
 
-![Abstract Syntax Tree diagram](diagrams/parser/graph.svg)
+![Abstract Syntax Tree diagram](assets/diagrams/parser/graph.svg)
 
 ## Type checking
 
@@ -562,7 +562,7 @@ pointers are used as integers, etc. To help express this, we construct a
 directed meta-type graph, with the vertices as meta-types, and the edges as
 valid implicit conversions:
 
-![Meta-type graph](diagrams/meta_types/graph.svg){ width=50% }
+![Meta-type graph](assets/diagrams/meta_types/graph.svg){ width=50% }
 
 Then, the question of compability simply becomes one of reachability, i.e. to
 use type $A$ in the context of type $B$, the metatype of $B$ must be reachable
@@ -1150,9 +1150,9 @@ call a pre-defined NOP, and then for that new NOP block to call to the original
 target. Note that at this point, interpretations have not been assigned, so
 these could appear inline, or alternatively, as their own functions.
 
-![Blocks before NOP insertion](diagrams/nops/graph.svg)
+![Blocks before NOP insertion](assets/diagrams/nops/graph.svg)
 
-![Blocks after NOP insertion](diagrams/nops/graph2.svg)
+![Blocks after NOP insertion](assets/diagrams/nops/graph2.svg)
 
 All NOPs are defined in the `vulnspec/data/nops/` folder, as individual blocks
 with a `nop` constraint to mark that they should be parsed and be avaiable for
