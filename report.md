@@ -9,7 +9,7 @@ abstract: |
   Capture the Flag competitions are rapidly increasing in popularity as a
   technique for learning and teaching computer security, however, they
   are time-consuming and difficult to manage, due to the need to
-  produce new and interesting challenges, and the inability to detect
+  produce new and interesting challenges and the inability to detect
   widespread cheating.
 
   In this report, we present a Domain-Specific Programming language for rapidly
@@ -57,14 +57,14 @@ The field of computer security is a fairly recent invention, really only drawn
 to the forefront of computer science interest in 1967 with Willis Ware's paper
 Security and Privacy in Computer Systems [@security-privacy]. Since then,
 computer security has been a constant back-and-forth between attackers seeking
-to gain unauthorised access to systems, and defenders working to patch and
-protect those systems.  However, as the field has grown, the need for more and
-more security professionals, researchers, students and enthusiasts has grown in
-order to continue to protect our increasingly heavily networked world.
+to gain unauthorised access to systems and defenders working to patch and
+protect those systems. However, as the field has grown, the need for more and
+more security professionals, researchers, students and enthusiasts has grown to
+continue to protect our increasingly heavily networked world.
 
-To provide a safe and moderated environment in which to practice and develop
-these skills, Capture the Flag events were introduced, in which the goal is to
-obtain flags, which are "secrets hidden in purposefully-vulnerable programs or
+To provide a safe and moderated environment to practice and develop these
+skills, Capture the Flag events were introduced, in which the goal is to obtain
+flags, i.e. "secrets hidden in purposefully-vulnerable programs or
 websites." In these events, "competitors steal flags either from other
 competitors (attack/defence-style CTFs) or from the organisers (jeopardy-style
 challenges)." [@wiki-ctf] In this protected environment, hackers can explore
@@ -74,37 +74,37 @@ unauthorised access to computer systems.
 
 Additionally, the academic use of jeopardy-style CTFs in learning environments
 has been extensively recognised, with inter-university competitions such as C2C
-[@c2c], Inter-Ace [@interace] and it's many spiritual successors such as HECC
-[@hecc], attracting a wide-array of industry sponsorship and interest including
+[@c2c], Inter-Ace [@interace] and its many spiritual successors such as HECC
+[@hecc], attracting a wide array of industry sponsorship and interest including
 from government institutions. CTFs have also seen use in classroom settings,
 both at the undergraduate level with exercises and assignments gamified such as
 with the University of Birmingham's security module [@bham-vm2], and secondary
 school level with NCSC-supported programs such as CyberFirst [@cyberfirst].
 
 However, while CTFs have become more and more widespread, few innovations have
-changed how they are fundamentally run - while a number of software platforms
+changed how they are fundamentally run - while some software platforms
 for hosting scoreboard software have been developed, very little effort has
 been made to standardise the process by which challenges are developed and
 hosted. This means that for every CTF, challenges must be painstakingly
 developed one-by-one, with little ability to reuse challenges from previous
 competitions. Cheating in the form of "flag-sharing" has also become an
 increasing cause for concern, with this allowing teams to gain unfair
-advantages, or students to plagiarise results, while remaining difficult to
+advantages, or students to plagiarise results while remaining difficult to
 detect by organisers.
 
 One approach taken by many competitions is to introduce flag randomisation, so
 that flags valid for one team/individual are not valid for others. Recent
 innovations have led to the extension of this approach to introduce random
-variation into the structure of the challenges themselves, so that each team
-receives it's own unique copy of the challenge, and challenges can even be
-reused between yearly competitions.
+variation into the structure of the challenges themselves so that each team can
+receive a unique copy, and challenges can even be reused between yearly
+competitions.
 
-In this report, we present our take on challenge randomisation, specifically in
-relation to binary-focused challenges. We introduce `vulnspec`, a
+In this report, we present our take on challenge randomisation, specifically
+concerning binary-focused challenges. We introduce `vulnspec`, a
 Domain-Specific programming language with the ability to easily encode
 vulnerabilities and functionality for powerful memory layout and control flow
 graph randomisation and manipulation. We explain both the design and
-implementation decisions as well as the technical details of our approach, and
+implementation decisions as well as the technical details of our approach and
 evaluate our success using a mini-CTF and survey to get player's opinions of
 the generated challenges.
 
@@ -117,17 +117,17 @@ the output of this design is often a single challenge binary, with only a
 single solution.
 
 This binary suffers from a lack of exploit variety, leading to an increased
-opportunity for CTF players to illegally share solutions. Some significant
-effort has been made to prevent this form of cheating, preventing flag-sharing
-by randomising flags, and has shown successful results - however, some cheating
-may still go unnoticed, due to the more complex "solve-sharing", in which
-players share detailed write-ups or solve scripts with each other, allowing them
-to gain different flags, but using the same technique. We want to provide a way
-to mitigate against this more advanced form of cheating.
+opportunity for CTF players to illegally share solutions. Some effort has been
+made to prevent this form of cheating, specifically by preventing flag-sharing
+through flag randomization, and has shown successful results. However, some
+cheating may still go unnoticed, due to the more complex "solve-sharing", in
+which players share detailed write-ups or solve scripts with each other,
+allowing them to gain different flags, but using the same technique. We want to
+provide a way to mitigate against this more advanced form of cheating.
 
 Additionally, the binary only represents a single challenge - an interesting
-puzzle can only be solved once, and not over and over again. We want to
-introduce random variation into the challenge as part of it's design and build
+puzzle that can only be solved once and not over and over again. We want to
+introduce random variation into the challenge as part of its design and build
 process, so that we can output multiple challenge binaries, with different
 solutions. This allows players to practice a single technique multiple times,
 to enhance understanding of the underlying concepts.
@@ -141,7 +141,7 @@ flow, while providing a level of abstraction over writing plain C code.
 ## Related work
 
 The area of automatic CTF challenge generation, despite being fairly
-under-explored, mostly due to only a recent interest in it, has a number of
+under-explored, mostly due to only recent interest in it, has several
 interesting pieces of work in the field, many of which we draw inspiration
 from.
 
@@ -149,53 +149,53 @@ The beginning of interest in automatic challenge generation seems to have begun
 with the 2014 edition of PicoCTF [@apg], where challenges were randomly
 templated to produce different challenges for different teams, reducing the
 ability of those teams to share flags and solutions. This was effective
-throughout the competition, and allowed greater insight into who was cheating,
+throughout the competition and allowed greater insight into who was cheating,
 how they were doing it, and the source of the leak.
 
 AutoCTF [@autoctf], a week-long event using challenges built using the LAVA bug
 injection system [@autoctf-lava] is one of the main and most popular instances
 of automatic challenge generation. Their findings included that such a tool
 could be (and was) used to massively reduce competition overhead and cost of
-development, and generate a wide variety of new challenges. However, because
+development and generate a wide variety of new challenges. However, because
 the system was built as bug-injection, automatically ensuring that the results
 were exploitable, or determining exactly the type of exploit that would be
 required is more complex to pin down.
 
 Contrasting with this bug-injection approach, we have specification-based
-challenge generation, such as SecGen [@secgen], which generate fully fledged
-exploitable virtual machines, and create escalation pathways inside. Instead of
-varying correct code, and well-configured services, templates are used to vary
-the content of each VM, to ensure that each student/player receives a different
-setup. Additionally, these challenges are themed, providing a consistent
-"feeling" to each VM, emphasising the importance of visual similarity.
+challenge generation, such as SecGen [@secgen], which generate fully-fledged
+exploitable virtual machines and create escalation pathways inside. Instead of
+varying correct code and configs, templates are used to vary the content of
+each VM, to ensure that each student/player receives a different setup.
+Additionally, these challenges are themed, providing a consistent "feeling" to
+each VM, emphasising the importance of visual similarity.
 
 Finally, Blinker [@blinker] creates randomised binary challenges using ERB ruby
 templating of source files and LLVM integration to provide variation at the
-binary level, and uses these tools in a CTF competition to evaluate it's
+binary level and uses these tools in a CTF competition to evaluate its
 success. In particular, this technique has inspired our work, however, the
 exact direction is quite different.
 
 # Design
 
-To solve the problems detailed above, and inspired by existing work, we present
+To solve the problems detailed above, inspired by existing work, we present
 `vulnspec`, a new domain-specific programming language that encodes
 specifications of vulnerable programs. Vulnspec can be interfaced with using a
-flexible command line interface, or using a Python API, producing C code,
+flexible command-line interface, or using a Python API, producing C code,
 binaries and environments ready for players to solve.
 
-We take a top-down approach, which is inspired by the configuration of SecGen
-and Blinker. Instead of taking working programs and modifying them to contain
+We take a top-down approach, inspired by the configuration of SecGen and
+Blinker. Instead of taking working programs and modifying them to contain
 vulnerabilities (like AutoCTF), we take a vulnerability description and produce
 a program that contains that vulnerability, introducing variation and context
 around it. Specifically, we extend the idea of simple templating to produce our
-own language that transpiles to C, and focus on creating variation within the
+own language that transpiles to C and focus on creating variation within the
 control flow graph and variable layouts, which make up the most complexity in
 designing exploitable challenges.
 
 ## Goals
 
-The `vulnspec` language and tooling has been built to satisfy a number of
-design goals, that have been critical in choosing which functionality to
+The `vulnspec` language and tooling has been built to satisfy several
+design goals, that have been critical in choosing what functionality to
 prioritise building and implementing. In these goals, we consider three main
 parties: the challenge designer, the challenge solver, and the competition
 organiser.
@@ -221,13 +221,13 @@ leader) should be able to:
 
 - Automatically check that generated challenges are solvable.
 - Be able to easily deploy and deliver challenges to players, in some standard
-  form, or as part as a larger system, such as a VM.
+  form, or as part of a larger system, such as a VM.
 
 ## Stages
 
 To translate from the raw text specification into binary artifacts, we move
 through a number of discrete stages of processing. These stages move from a
-low-level representation of the specification, to a high-level, programmatic
+low-level representation of the specification to a high-level, programmatic
 view, finally producing low-level C code as an output.
 
 These stages are:
@@ -238,23 +238,23 @@ These stages are:
   graph
 - [**Interpretation**](#interpretation) to transform and remove all blocks and chunks
 - [**Code generation**](#code-generation) to produce code in the target output language
-- Optional [**environment construction**](#environments) to produce binaries and docker
+- Optional [**environment construction**](#environments) to produce binaries and Docker
   containers
 
-Aside from these core stages, a number of smaller minor operations and
-debugging steps are also performed in-between them, to provide additional
-smaller pieces of functionality that are only really possible to achieve at
-that exact level of representation.
+Aside from these core stages, several minor operations and debugging steps are
+also performed in-between them, to provide additional smaller pieces of
+functionality that are only really possible to achieve at that exact level of
+representation.
 
 ## Specification
 
 Vulnspec is designed to a minimal programming language that can express
-vulnerabilities. As such, it's syntax mirrors C, however, there are a number of
-high level constructs that C doesn't have.
+vulnerabilities. As such, its syntax mirrors C, however, there are a couple of
+high-level constructs that C doesn't have.
 
 ### Blocks and Chunks
 
-Blocks and chunks are the highest level constructs in the specification which
+Blocks and chunks are the highest level constructs in the specification that
 represent pieces of code and data respectively.
 
 A block is essentially a procedure - additionally, it can't take any arguments
@@ -267,7 +267,7 @@ block foo {
 ```
 
 Blocks can call each other, forming a call graph. This isn't limited to just a
-directed acyclic graph, blocks can call each other, and form co-recursive
+directed acyclic graph; blocks can call each other and form co-recursive
 structures.
 
 ```
@@ -284,8 +284,8 @@ block second {
 
 In scenarios like this one, where a block is only referenced by one other
 block, we can use an implicit block split, with an improvement in readability.
-This results in the exact same block-chunk graph later in the pipeline, as the
-splits are removed are translated into calls directly.
+This results in the same block-chunk graph later in the pipeline, as the splits
+are removed are translated into calls directly.
 
 ```
 block first {
@@ -309,9 +309,9 @@ chunk x : [64]char,  // if x overflows...
 A program can define as many chunks as it likes, although vulnspec only
 guarantees proximity for variables placed into the same chunk.
 
-Additionally, both blocks and chunks can contain a number of constraints, which
-enforce an interpretation, or somehow dictate how vulnspec should treat the
-block or chunk later on through the pipeline.
+Additionally, both blocks and chunks can contain constraints enforcing an
+interpretation, or somehow dictating how vulnspec should treat the block or
+chunk now or later in the pipeline.
 
 ```
 chunk (global) a : int
@@ -331,7 +331,7 @@ In the above:
 - `b` is forced to be a local variable, and to appear as part of a stack frame
 - `c` will be only initialised once, no matter whether it is local or global
 - `f` is forced to be inlined into all blocks that call it
-- `g` is forced to be a separate function, and function called by all blocks
+- `g` is forced to be a separate function, and is function-called by all blocks
   that call it
 
 See **[Interpretation](#interpretation)** for more information on
@@ -340,15 +340,13 @@ C-style primitives.
 
 ### Statements
 
-To actually specify behaviour in the specification, blocks can contain any
-number of statements.
-
-Vulnspec is kept fairly minimal in the number of different types of statements
-it offers:
+To specify behaviour in the specification, blocks can contain any number of
+statements. Vulnspec is kept fairly minimal with the variety of statements it
+offers:
 
 | Statement | Description |
 | :-------- | :---------- |
-| Call | Transfer execution control to another block, and return control to the current block after it finishes. |
+| Call | Transfer execution control to another block and return control to the current block after it finishes. |
 | If | Conditionally execute a series of statements based on a boolean expression. |
 | While | Repeatedly execute a series of statements based on a boolean expression. |
 | Assignment | Assign the value of an expression to an lvalue, such as a variable, dereferenced pointer or array cell. |
@@ -358,9 +356,9 @@ it offers:
 
 Expressions are vital to expressing any of the above statements. Essentially an
 expression is a way of combining separate individual raw values and variables
-together to yield a computed result. This result may be `void`, as in the case
-of a statement that only calls a `void` function, but can be any type of value
-that can be defined in the language.
+to yield a computed result. This result may be `void`, as in the case of a
+statement that only calls a `void` function, but can be any type of value that
+can be defined in the language.
 
 These expressions can be used purely for their side effects, such as with an
 expression statement, or may be stored in an lvalue, a minimal subset of
@@ -373,7 +371,7 @@ are shown in the following table:
 | Value type | Description |
 | :--------- | :---------- |
 | `int`      | An integer represented as a series of digits, with a base |
-| `float`    | A floating point number represented as a whole number and a fractional part |
+| `float`    | A floating-point number represented as a whole number and a fractional part |
 | `char`     | A single character as an integer in a byte |
 | `string`   | A series of characters |
 | `bool`     | A boolean value, either `true` or `false` |
@@ -393,16 +391,17 @@ block calc {
 ```
 
 This block uses the `M_PI` value defined in the `math.h` header. Note that in
-this case we have to explicitly include the header, while normally we don't
+this case, we have to explicitly include the header, while normally we don't
 have to. For more information, see **[External Library Integration](#external-library-integration)**.
 
 ### Grammar
 
 An annotated simplified EBNF grammar is defined below.
 
-This grammar isn't quite complete, mostly for simplicity, and ignores
-white-space, as well as newlines, as well as a couple of other minor constructs
-and hacks used to optimise and clarify the implementation of the parser.
+This grammar isn't quite complete, mostly for simplicity. As part of this, it
+ignores white-space, including newlines, as well as a couple of other minor
+constructs and hacks used to optimise and clarify the implementation of the
+parser.
 
 ```
 (* a specification is a series of high-level pieces *)
@@ -494,12 +493,12 @@ boolean = "true" | "false"
 
 In this chapter, we present how the above design goals and specification is
 implemented to produce the vulnspec synthesis tool. The tool is implemented in
-around 8000 lines of Python code, and includes a lexer and parser written from
+around 8000 lines of Python code and includes a lexer and parser written from
 scratch, a minimal type checking system, libc integration, randomisation
 procedures and final challenge generation and output.
 
 The structure of this section mirrors the pipeline laid out in the **Stages**
-section above, and moves from the plain-text vulnspec specification to the final
+section above and moves from the plain-text vulnspec specification to the final
 challenge binaries and environments.
 
 ## Lexical analysis and parsing
@@ -524,9 +523,9 @@ block main {
 In the lexing stage, we break up the raw text input into a series of tokens, or
 terminals, of which there are 38 distinct types. The problem of producing a
 series of tokens is trivially broken down into producing a single token at a
-position in the raw stream, and moving the position for the next token to be
+position in the raw stream and moving the position for the next token to be
 read. Our algorithm then just becomes an iterative algorithm, repeating until
-we reach the end of stream.
+we reach the end of the stream.
 
 At this stage, we specifically only handle any language features that are
 *regular*, those that can be matched by a regular expression, or what we use, a
@@ -555,25 +554,26 @@ In our example:
 In the parsing stage, we read tokens from the stream and attempt to form them
 into nodes of a tree. To do this, we use a recursive-descent parser, which
 expresses terminals in the language by consuming tokens from the token stream,
-and non-terminals as functions which can consume terminals, or call other
+and non-terminals as functions that can consume terminals, or call other
 non-terminals. In this way, the structure of the call graph of the parser
 mirrors the structure of the produced AST.
 
 The parser is almost (and initially was) an $LL(k)$ grammar, which allowed the
 parser to be entirely predictive. Unfortunately, because of some of the
-complexity of the language, it's not possible to easily define some of the
+complexity of the language, its not possible to easily define some of the
 structures in the language entirely predictively and so some backtracking is
 required. For example, when parsing an expression, it may end with an array
-index - so we can attempt to parse that, but it may fail, and so we backtrack
-to before we tried. Similarly, when attempting to parse a statement, there are
-two possibilities, an lvalue on the left of an assignment, or an expression as
-part of an expression statement. There's no way with $k$ steps of look-ahead to
-work out which one is which, so we try one, then the other, using backtracking.
+index - so we can attempt to parse that, but it may fail, so we backtrack to
+before we tried. Similarly, when attempting to parse a statement, there are two
+possibilities, an lvalue on the left of an assignment, or an expression as part
+of an expression statement. There's no way with $k$ steps of look-ahead to work
+out which one is which, so we try one, then the other, using backtracking.
+
 It's certainly possible to reduce the current grammar to an $LL(k)$ one and so
 allow parsing in linear time with predictive parsing, but since most
 specifications are quite small, it felt like an unnecessary optimisation, when
 other features needed development.
-graph
+
 At the end of parsing, we produce an Abstract Syntax Tree for the entire
 specification, which can now be traversed and manipulated in later stages.
 
@@ -590,19 +590,18 @@ verification on the tree, we use a simple type-checking system.
 
 Essentially, we traverse the tree using a visitor pattern, at each level
 returning a type up to the next level, which can then be checked against other
-known types, or types derived from the AST in a similar way. For example,
-during an assignment, the types of both sides are checked against each other
-for compatibility, while an if statement will check that it's condition is
-compatible as a boolean value.
+known and explicitly annotated types, or types similarly derived from the AST.
+For example, during an assignment, the types of both sides are checked against
+each other for compatibility, while an if statement will check that its
+condition is compatible as a boolean value.
 
-However, because we are aiming for compatibility with the C type system, since
-we are compiling to C, we can't create an entirely new type system from
-scratch. In fact, due to the fact that the C type system is so complex, and
-built upon decades of historical baggage, it's incredibly difficult to
-replicate perfectly, specifically, the implicit type conversion and promotion
-rules. As a result, we construct a minimal type model of how C performs it's
-checks, and rely on explicit casts for cases that fall outside of more common
-use cases.
+However, because we are aiming for compatibility with the C type system and
+since we are compiling to C, we can't create an entirely new type system from
+scratch. In fact, because the C type system is so complex and built upon
+decades of historical baggage, its incredibly difficult to replicate perfectly,
+specifically, the implicit type conversion and promotion rules. As a result, we
+construct a minimal type model of how C performs its checks and rely on
+explicit casts for cases that fall outside of more common use cases.
 
 Our type model can be described by defining two kinds of types - concrete
 types, such as an integer `int` or a string `*char`, and abstract types, such
@@ -610,12 +609,12 @@ as `Integral` or `Pointer`, which we call "meta"-types. Between these two
 kinds, we can establish a simple function that maps concrete types into their
 respective abstract types. **more elaboration**
 
-When checking for compatibility between two types, it's not sufficient
+When checking for compatibility between two types, its not sufficient
 to check that a type is identical to another type, like in more strongly-typed
-languages; instead we need to verify that a type can be used in the context of
+languages; instead, we need to verify that a type can be used in the context of
 another type. For example, in C, integers are effectively used as Boolean,
 pointers are used as integers, etc. To help express this, we construct a
-directed meta-type graph, with the vertices as meta-types, and the edges as
+directed meta-type graph, with the vertices as meta-types and the edges as
 valid implicit conversions:
 
 ![Meta-type graph](assets/diagrams/meta_types/graph.svg){ width=50% }
@@ -624,9 +623,10 @@ Then, the question of compatibility simply becomes one of reachability, i.e. to
 use type $A$ in the context of type $B$, the meta-type of $B$ must be reachable
 on a path reachable from the meta-type of $A$.  Using this, we can define an
 additional notion of type checking, called "fuzzy" typing. This technique
-allows easily checking adding an integer to a float, and converting between
-pointers, but requires extra thought when trying to perform unsafe operations,
-like downcast from floats to ints, or converting integers back to pointers.
+allows easy checking of addition with integers and floats, and converting
+between pointers, but requires extra thought when trying to perform unsafe
+operations, like downcast from floats to ints, or converting integers back to
+pointers.
 
 This graph is encoded in the `config.yaml` file for the builtins directory (and
 shortened for succinctness):
@@ -662,21 +662,21 @@ core:
 ...
 ```
 
-Beyond the explicit graph here, we additionally define a universal meta type,
+Beyond the explicit graph here, we additionally define a universal meta-type,
 which skips the reachability check entirely, always returning true; this type
-can be assigned anything and used anywhere. This is the meta type that we use
-for unknown meta types, such as with external library integrations. This type
-isn't notated in the graph, since it's not defined as part of it, but rather as
+can be assigned anything and used anywhere. This is the meta-type that we use
+for unknown meta-types, such as with external library integrations. This type
+isn't notated in the graph, since its not defined as part of it, but rather as
 an additional concept on top of it.
 
 Note that the above graph is only a rough approximation of the C implicit type
-system conversions, and could be made a lot more complete with the further
+system conversions and could be made a lot more complete with the further
 distinction between more types, such as differently sized types, or signed and
 unsigned integers, etc. Additionally, a couple of checks cannot be expressed by
 this graph easily:
 
 - Arrays can be passed as arguments, but cannot be assigned to.
-- Functions can never be directly assigned to, or passed around.
+- Functions can never be directly assigned to or passed around.
 
 ## External library integration
 
@@ -689,17 +689,16 @@ require the challenge designer to write C *and* vulnspec, without any form of
 safety and sanity checks from type-checking.
 
 As such, we provide a utility to generate listings of all functions, variables
-and types in libc, which can then be referenced using a special syntax from
+and types in libc, which can then be referenced using special syntax from
 vulnspec specifications. This utility is bundled along with the
 `builtin_generator` tool which is used to generate primitive types and the
 meta-type graph from the previous section.
 
 In the `config.yaml` in the builtins directory, in addition to all the fields
-[already detailed](#type-checking), we introduce a `libraries` key which
+[already detailed](#type-checking), we introduce a `libraries` key that
 specifies information relevant to parsing and loading data from as many
 libraries as we want - however, for mostly practical reasons, we only include
-libc, however, this approach could be extended to any number of third-party
-libraries.
+libc, however, this approach could be extended to any third-party libraries.
 
 ```yaml
 ...
@@ -727,21 +726,21 @@ Each field's purpose is shown below:
 
 Note that we use the more lightweight libmusl, as opposed to the more common
 and frequently used glibc. We expected that libmusl would prove simpler to
-programatically analyse, with fewer internal complex dependencies, and
+programmatically analyse, with fewer internal complex dependencies, and
 empirical tests confirmed this. Since the process mostly only extracts the
 public functions of the library, all results from libmusl are transferrable to
 when we use glibc (which is what we use for testing).
 
 The builtin generation process is fairly straightforward from the provided
-data. Initially, we scan for common build autotools and makefile build scripts,
+data. Initially, we scan for common build autotools and Makefile build scripts,
 such as `configure` and `Makefile` respectively, which we run before continuing
 to the next stage. For some libraries, this *might* not be required, however,
-quite a number of more sophisticated and complex libraries automatically
-generate header and source files which may need to be scanned in later stages.
+many more sophisticated and complex libraries automatically generate header and
+source files which may need to be scanned in later stages.
 
 Next, we recursively traverse all the specified `include` directories, looking
 for `.h` header files, collecting them into a data structure as we go. As we do
-this, we also open each header file, scanning for all it's includes using a
+this, we also open each header file, scanning for all its includes using a
 simple regular expression - the scanner then searches for this include in the
 `include_paths` directories, adding it as a child of the top-level header if
 found. Then we repeat this process, scanning this new file includes, looking
@@ -750,7 +749,7 @@ for those, etc.
 This scanning process may seem needlessly complex, however, not all important
 constructs in a header will be directly declared in that header. For example,
 the `stdint.h` header does not actually include a definition of `uint8_t`,
-instead loading it from an internal source - by recursively searching for that
+instead, loading it from an internal source - by recursively searching for that
 source, we can find the true definition and implicitly connect it to `stdint.h`.
 
 Once we have collected each header file, we can scan it. Initially, we
@@ -771,7 +770,7 @@ utilise libraries.
 ## Translation
 
 Once the Abstract Syntax Tree has been checked and transformed, we can convert
-it to a higher level representation, the block-chunk graph. In this
+it to a higher-level representation, the block-chunk graph. In this
 representation, instead of merely representing the low-level syntax of the
 language, we more completely represent the relationships between individual
 blocks and their calls, and chunks and their variables. Whereas in the AST we
@@ -781,7 +780,7 @@ the relationships.
 
 This has enormous implications in how we can traverse the graph, easily
 allowing defining complex operations such as structural traversals and
-structural maps using recursion and first order functions. This introduced
+structural maps using recursion and first-order functions. This introduced
 complexity allows performing more complex operations such as interpretation,
 described **later**.
 
@@ -790,22 +789,22 @@ during type checking. However, instead of returning a type labelling for each
 node, we return a new node that has been translated. The domain and co-domain of
 this transformation are completely separate (except for explicitly labelled
 types), and the nodes used to represent the block-chunk graph are similar but
-unique to the ones in the tree. They are also, in a number of cases, simpler,
-not encoding the complexity of different literal values, and simplifying some
+unique to the ones in the tree. They are also, in a few cases, simpler,
+not encoding the complexity of different literal values and simplifying some
 nodes away into other constructs.
 
 ![Overview of an example block-chunk graph](assets/diagrams/parser/blockchunk.svg)
 
 Most nodes have a one-to-one correspondence in the block-chunk graph, however,
-a number of the translations are slightly more complex:
+some of the translations are slightly more complex:
 
-- Exact values are removed, and replaced with string representations, to what
+- Exact values are removed and replaced with string representations, to what
   they will be output as in C code generation. Interpretation and other later
   stages don't require knowledge of individual values, so we can simplify it
   here. As part of this, templates will also be resolved.
 - If statements are unwrapped from their tree-like recursive structure to a
-  sequence which simplifies processing and code generation dramatically.
-- Block splits are removed, and the block is split into two separate blocks,
+  sequence that simplifies processing and code generation dramatically.
+- Block splits are removed and the block is split into two separate blocks,
   with the first one ending in calling the second. Since the later stages
   require lots of complex block processing, this simplifies needing to handle
   more cases.
@@ -825,24 +824,25 @@ block can be called. We call each collection of decisions an "interpretation",
 the results of which are executed by an "interpreter" modifying the graph.
 
 The output of this process is a new graph, represented by a "program" object,
-which contains a collection of functions (with their own arguments, local
-variables and statements), and a number of global variables and optional
-external variables (only if the specification requires them).
+that contains a collection of functions (with their own arguments, local
+variables and statements), global variables and optional external variables
+(only if the specification requires them).
 
 As the process of interpretation moves from start to finish we translate from
 the vulnspec-style block-chunk graph, into a graph that more closely represents
-the to-be-generated C code. This translation isn't performed in one piece, and
-instead in multiple small pieces that get it closer to the goal.
+the to-be-generated C code. This translation isn't performed at once and is
+instead broken up into multiple small pieces that each get it closer to the goal.
 
 ### Generation
 
 The most important step in the interpretation process is to remove the concepts
 of blocks and chunks almost entirely from the program. These are vulnspec
-concepts, and do not translate directly down into C code.
+concepts and do not translate directly down into C code, so they're removed and
+replaced with C pieces.
 
-Block represent lines of code, and calls represent the relationship between
+Block represent lines of code, calls represent the relationship between
 them, while chunks represent variables appearing next to each other in
-sequence. For both these blocks and chunks, we define a number of
+sequence. For both these blocks and chunks, we define a set of
 "interpretations" - essentially, a technique for translating them into lower
 level C.
 
@@ -885,7 +885,7 @@ calls to function blocks.
 In the first pass, we attempt to remove all vulnspec-style calls that reference
 blocks with an inline interpretation. By doing this, we simplify the process
 for the next stage, since all remaining calls have function interpretations, so
-the resulting code can make a number of assumptions that allow for a simpler
+the resulting code can make several assumptions that allow for a simpler
 implementation.
 
 To reduce the inline calls, we map over each statement in every block,
@@ -894,24 +894,23 @@ group of statements, which are the mapped statements that make up the block it
 references (this is slightly inefficient, since we might end up mapping a
 statement twice, but it does ensure that there are no orphan inline calls).
 This statement group is a construct only created by this specific portion of
-the code, and essentially represents a collection of statements that should be
+the code and essentially represents a collection of statements that should be
 viewed as a series of lines of code - this is mainly provided to simplify the
 process of defining a mapping function, so that the type can remain
 $\text{Block} \to \text{Block}$.
 
-However, it is possible in a number of edge cases that the above procedure
-won't work entirely correctly. This is because the exact order that blocks are
-visited in still matters despite the additional level of recursive mapping. If
-a function block is modified as part of the above procedure, then other
-function blocks that refer to this function block will still point to the old
-version, not the new one, as a side-effect of using a more condensed graph
-representation.
+However, it is possible that in a few edge cases the above procedure won't work
+entirely correctly. This is because the exact order that blocks are visited in
+still matters despite the additional level of recursive mapping. If a function
+block is modified as part of the above procedure, then other function blocks
+that refer to this function block will still point to the old version, not the
+new one, as a side-effect of using a more condensed graph representation.
 
 To resolve this issue, after mapping over every block completely, after all
 stages, we "repair" all pointers by looking up the name of the block that they
-expect to be pointing at, and directing it to the new, correct block.
+expect to be pointing at, instead directing it to the new, correct block.
 
-After all this, all inline calls are correctly removed, and the next stage of
+After all this, all inline calls are correctly removed and the next stage of
 interpretation can begin.
 
 ### Function call reduction
@@ -932,13 +931,13 @@ $x \rightarrow y$. If a variable $\alpha$ is declared in block $x$ as a local
 variable, then for $y$ to access this variable, the call $x \rightarrow y$ can
 be modified to pass $\alpha$ as a parameter. By performing this computation for
 all variables, for all calls, we can compute the function signature of each
-block, and so modify all the vulnspec block calls into function-style calls.
+block and so modify all the vulnspec block calls into function-style calls.
 
 #### Rooting
 
-To determine which function calls need to be patched with which parameters, we
+To determine which function calls need to be patched with what parameters, we
 first need to "root" each chunk, i.e. find a function block such that all
-references to a chunk are contained in that block and it's descendants. We can
+references to a chunk are contained in that block and its descendants. We can
 then add that chunk's variables to the collection of local variables (at a
 later stage when we actually construct the function).
 
@@ -999,12 +998,12 @@ By traversing the call graph, we can easily compute all paths to each variable.
 - $d$ is referenced by $x \rightarrow y \rightarrow z$ and $x \rightarrow z$
 - $e$ is referenced in all blocks by $x$, $x \rightarrow y$, $x \rightarrow y \rightarrow z$ and $x \rightarrow z$
 
-The naive method, which computes the common prefixes of all paths will
+The naive method, that computes the common prefixes of all paths will
 correctly place $a$, $c$ and $e$ in $x$ and $b$ in $y$. However, it will
 sub-optimally place $d$ into $x$, when it could be easily placed into $z$.
 
 The deepest-valid algorithm correctly places $d$, by first detecting $x$ and
-$z$ as valid locations for the variable, and then choosing the deepest of the
+$z$ as valid locations for the variable, then choosing the deepest of the
 two.
 
 Placing all the variables, we can compute the following:
@@ -1022,12 +1021,12 @@ the same variable's usage, we need to pass that variable in the function call.
 Intuitively, this works because based on the above rooting stage, we know that
 each block that requires a variable will have access to it through an ancestor
 block. Then inductively, we can show that a block with direct access to a
-variable in its scope will pass access to that variable to all it's children
+variable in its scope will pass access to that variable to all its children
 which it calls. Because of this, all descendants of the root block that need
 access to the variable can get it!
 
 Practically, the signatures of function calls can be constructed by iterating
-through all paths to all variable (after skipping to the root), and patching
+through all paths to all variables (after skipping to the root), patching
 each call to also include the variable name that is needed at a lower level.
 
 For example, for the variable $e$ above (rooted at $x$), from the path $x
@@ -1045,9 +1044,8 @@ the function signatures:
 ### Parameter lifting
 
 Unfortunately, while the above algorithm accurately describes how to decide
-where in memory variables should be located, and how to share access to them,
-if we use only this procedure, the function signatures will be clearly
-incorrect.
+where in memory variables should be located and how to share access to them,
+if we use only this procedure, the function signatures will be incorrect.
 
 To see this, we present the following example:
 
@@ -1073,12 +1071,12 @@ To resolve this, we perform a process of "lifting". This modifies expressions
 from their old patterns of reference that assume a globally accessible
 variable, to a new pattern of reference that properly accesses each variable
 that has been made local by interpretation. In this case, this would change the
-function signature to accept a pointer to $a$, and so allow changing 
+function signature to accept a pointer to $a$ and so allow changing 
 the value correctly.
 
 To lift a variable, we first recursively find all usages of that variable in each
-block, and detect all the ways in *how* it is used, recording these as "usage
-captures", and collecting them for later. These captures record the exact
+block, detecting all the ways it is accessed, recording these as "usage
+captures" and collecting them for later. These captures record the exact
 pattern of reference, such as if it is addressed (with the address of
 operator), dereferenced, or indexed into, as well as any compound of the above.
 Along with these expression types, we also define an implicit "virtual"
@@ -1090,12 +1088,11 @@ From the collection of usage captures, we can then determine the *maximal*
 capture for each function block, i.e. a capture from which it is possible to
 derive the values of all the other captures (including the ones in calls to
 other functions). For instance, a pointer to a variable can derive the value of
-that variable, likewise, an array can derive all the values at each of it's
+that variable, likewise, an array can derive all the values at each of its
 indices. Specifically, we want to find the *minimum* maximal capture, the
-capture that only just allows derivation of all the other values, and doesn't
+capture that only *just* allows derivation of all the other values and doesn't
 require extraneous access patterns. In Figure \ref{fig:lift}, we can see that
-the outermost items are able to derive the innermost items using common
-operators.
+the outermost items can derive the innermost items using common operators.
 
 \begin{figure}
   \begin{tikzpicture}
@@ -1113,21 +1110,21 @@ To derive the maximal capture, we compare two usage captures trees at a time,
 determining at each level what capture is required to allow deriving both of
 the values. Then we use this as a first-order function in a *reduce* operation
 to calculate the maximal capture for all the captures. Now, by traversing this
-final computed capture, we derive a type which is the correct type needed in
+final computed capture, we derive a type that is the correct type needed in
 the function signature, since it represents the least-broad type needed to
 derive all the uses of the variable.
 
 All that's left now is to translate each usage capture that is contained in
-each block into a new capture which correctly uses the new maximal as a basis
+each block into a new capture that correctly uses the new maximal as a basis
 for deriving the same value and resulting operation as before. To do this, we
-create an inverted usage capture of the maximal which uses the new derived type
+create an inverted usage capture of the maximal that uses the new derived type
 of the maximal, but every individual operation is inverted, so dereferences become
 references, etc. This inversion essentially represents how one might get from
-the new maximal to the raw value of the variable (however, it's likely
-nonsensical because it might involve refs of refs, and other strange
-structures). However, we can take this inversion, and put into each found usage
+the new maximal to the raw value of the variable (however, its likely
+nonsensical because it might involve refs of refs and other strange
+structures). However, we can take this inversion and put into each found usage
 capture in place of the old one. Then we can simplify this new capture, by
-removing ref and deref pairs. Eventually, we derive a new usage capture, which
+removing ref and deref pairs. Eventually, we derive a new usage capture which
 represents the new usage of the variable within the signature of the function.
 
 \begin{figure}
@@ -1146,7 +1143,7 @@ represents the new usage of the variable within the signature of the function.
 
 This can be intuitively understood by interpreting usage captures as a vector
 space as in Figure \ref{fig:lift-vecspace}. In this diagram, $u$ is a usage
-capture, and $m$ is the maximal, both computed from the origin (where the
+capture and $m$ is the maximal, both computed from the origin (where the
 variable is globally accessible). From this, we want to compute how to get $u$
 from the new maximal, which is calculated as $u - m$, or the combination of the
 old usage capture with the inverse of the maximal.
@@ -1156,7 +1153,7 @@ old usage capture with the inverse of the maximal.
 In the final stage, having translated all statements and expressions in each
 block correctly, we can now translate the final remaining blocks into
 functions. Since all calls have now been removed and replaced with new
-statements, and all variable references have been fixed, all that's left to do
+statements and all variable references have been fixed, all that's left to do
 is to construct the functions themselves.
 
 For each block, we can use the already-computed function signatures from
@@ -1165,7 +1162,7 @@ also determine which local variables need to be assigned to each function so
 that they appear in the right stack frame.
 
 With all functions correctly defined, we can collect them along with all global
-and external variables, into a program object, which represents the end product
+and external variables, into a program object that represents the end product
 of interpretation. This can then be traversed later during code generation to
 produce fully valid and vulnerable C code!
 
@@ -1174,26 +1171,25 @@ produce fully valid and vulnerable C code!
 An important aspect of vulnspec is to allow generating different programs that
 all contain the same described vulnerability. While during the interpretation
 process we introduce some randomness based on how we restructure the
-block-chunk graph, these changes do not actually introduce major changes into
-how the program actually runs, or the details of what an exploit might look
-like.
+block-chunk graph, these changes do not introduce major changes into how the
+program actually runs, or the details of what an exploit might look like.
 
-To actually significantly semantically modify the output for a number of
-outputs, we introduce a number of possible techniques, all of which have been
-developed and implemented in vulnspec, however, it is by no means a complete
-list of all the possible transformations that could be constructed.
+To significantly semantically modify the output, we introduce a couple
+of possible techniques, all of which have been developed and implemented in
+vulnspec, however, it is by no means a complete list of all the possible
+transformations that could be constructed.
 
 Some of these techniques introduce surface level changes, such as the random
 name generation, others introduce semantic difference in the program (and the
 required exploit) such as templating, and others introduce both. Both of these
 techniques are important together - generated programs must not only behave
-slightly differently, and require different exploits for them, but they must
+slightly differently and require different exploits for them, but they must
 also look significantly different.
 
 ### NOPs
 
 One of the most significant techniques for providing powerful randomisation are
-the introduction of No-Operation blocks (shortened to NOPs), which provide
+the introduction of No-Operation blocks (shortened to NOPs), that provide
 variance across the temporal domain.
 
 Essentially, each NOP block does nothing, except to provide some small
@@ -1204,9 +1200,9 @@ introduce interesting comments into the code.
 
 To add NOPs into the block-chunk graph, we traverse it, looking for vulnspec
 calls. When we encounter one, with a random probability we alter it to instead
-call a pre-defined NOP, and then for that new NOP block to call to the original
+call a pre-defined NOP, then modify that new NOP block to call to the original
 target. Note that at this point, interpretations have not been assigned, so
-these could appear inline, or alternatively, as their own functions.
+these could eventually appear inline or as their own functions.
 
 ![Blocks before NOP insertion](assets/diagrams/nops/graph.svg)
 
@@ -1224,9 +1220,9 @@ block (nop) log {
 
 Introducing NOPs is slightly more complex than detailed above, especially when
 the NOP makes references to other blocks, chunks or externs. To solve this,
-when initialising the collection of NOPs, we traverse each NOP, exploring it's
+when initialising the collection of NOPs, we traverse each NOP, exploring its
 connection to other blocks (including other NOPs, which is valid), as well as
-it's variable references. Then, when we introduce a NOP into the block-chunk
+its variable references. Then, when we introduce a NOP into the block-chunk
 graph, we also have to include all the blocks, chunks and externs that it
 references.
 
@@ -1238,11 +1234,11 @@ are abstract values that are not fixed, but take on a single concrete value for
 a single synthesis. This instantiation of abstract to concrete values is
 performed after parsing, but before translation into the block-chunk graph.
 
-Each template has 2 components: a name, and an optional definition (note that
+Each template has 2 components: a name and an optional definition (note that
 for the first usage of a template, the definition is not optional). In
-vulnspec, they are written: `<Name; Definition>`, where `Name` is a valid
-vulnspec name, and `Definition` is a Python expression. A templated value can
-occur wherever a normal value might be expected.
+vulnspec, they are written: `<Name; Definition>` or `<Name>`, where `Name` is a
+valid vulnspec name and `Definition` is a Python expression. A templated value
+can occur wherever a normal value might be expected.
 
 During template instantiation, we traverse all the chunks, then all the blocks
 in their order of declaration. When we encounter a template node, we evaluate
@@ -1252,13 +1248,13 @@ Python `str` with a `StringValueNode`, etc. If a template definition is not
 provided, then we simply retrieve a cached result from a previously
 instantiated template with the same name.
 
-During template evaluation we provide a number of variables and functions to
-more easily create complex expressions. In the global scope, we allow access to
-a number of useful libraries (`random`, `string`, etc), as well as the
-translations from vulnspec to C names. Meanwhile, in the local scope, we allow
-referencing any already instantiated template values - this allows creating
-template values that depend on the value of another template, a vital feature
-in constructing vulnerable programs.
+During template evaluation we provide access to some Python variables,
+functions and modules to more easily create complex expressions. In the global
+scope, we allow access to useful libraries (`random`, `string`, etc), as well
+as the translations from vulnspec to C names. Meanwhile, in the local scope, we
+allow referencing any already instantiated template values - this allows
+creating template values that depend on the value of another template, a vital
+feature in constructing vulnerable programs.
 
 For example:
 
@@ -1269,13 +1265,13 @@ block foo {
 }
 ```
 
-In the above, we randomly define the length of the `buffer`, and then use the
-same value later to create a single NULL-byte overflow, which could be used as
+In the above, we randomly define the length of the `buffer`, then use the
+same value later to create a single NULL-byte overflow, that could be used as
 part of an RCE exploit.
 
 While templates are defined as abstract values, we can also use them inside C
 literal expressions and statements, which allow us to perform complex randomisation
-inside parts of the program which cannot be defined in vulnspec due to the
+inside parts of the program that cannot be defined in vulnspec due to the
 limitations of the language.
 
 To demonstrate, in the following specification, both block $x$ and $y$, will generate
@@ -1297,7 +1293,7 @@ block y {
 An important part of generating some level of variety between different output
 results is generating new names for variables and functions - different names
 will make the same program look different, even though they may be otherwise
-identical. However, completely random names will appear nonsensical, and so to
+identical. However, completely random names will appear nonsensical, so to
 prevent this, we use a Markov chain model based on existing libraries,
 specifically the same `libmusl` as used to provide libc integration.
 
@@ -1338,11 +1334,11 @@ increasingly similar to the source material, as shown in the following table
 | 3 | `tmp`, `tls_tail`, `v5`, `wcs`, `test` | `weak_alias`, `ldir_r`, `sched_secmp`, `ctions_getln`, `isspawn_find` |
 
 As we move towards higher values of $k$, the results become more and more
-readable, and more similar to actual names that we would expect a programmer to
+readable and more similar to actual names that we would expect a programmer to
 name variables and functions.
 
-However, the issue now becomes picking a suitable value of $k$, one that it is
-low enough to provide some variety, and high enough to enforce some sense of
+However, the issue now becomes picking a suitable value of $k$, such that it is
+low enough to provide some variety, yet high enough to enforce some sense of
 consistency. To do this, we settle on an approach that allows us to select
 *multiple* values of $k$, using what we call a "Multi" Markov chain model.
 
@@ -1361,17 +1357,17 @@ As expected, this generates a combination of the results from above:
 To generate the probabilities for this model, we use the same primitives for
 extracting Ctags from `libmusl` as the builtin generator. Essentially we
 iterate over each tag, counting the number of times that a $k$-length prefix
-produces a given character. From this, we can produce a weighted list, and so
-generate the model described above.
+produces a given character. From this, we can produce a weighted list,
+generating the model described above.
 
 To optimise picking from the weighted list, instead of storing the individual
 weight of each possibility, we store the cumulative weight of all possibilities
 so far. This allows us to select randomly from the list using linear search in
-$O(\log n)$ time, instead of the naive linear search which takes $O(n)$.
+$O(\log n)$ time, instead of a naive linear search that takes $O(n)$.
 
 ## Code generation
 
-With all blocks and chunks constrained and properly interpreted, and the
+With all blocks and chunks constrained and properly interpreted and the
 entire Abstract Syntax Graph rewritten into C-style constructs, we can now
 generate C code.
 
@@ -1407,7 +1403,7 @@ kernel settings and the setup of the environment.
 Therefore, to bridge this gap, we provide some additional utilities for
 producing challenge binaries, suitable environments to run them in, and
 automatic solution script generation to validate that the produced programs are
-actually solvable.
+solvable.
 
 These binaries and environments are created based on a variety of comment-based
 configuration options. Defining these configuration options in the comments
@@ -1439,7 +1435,7 @@ During environment generation, we use the options to:
 
 - Create a system layout that allows for reading the flag on successful
   exploitation of the vulnerable program
-- Automatically build a Dockerfile to generate a docker image for deployment
+- Automatically build a Dockerfile to generate a Docker image for deployment
 
 #### Compilation
 
@@ -1454,7 +1450,7 @@ more difficult by enabling new protections.
 
 These build commands are prefixed to the file output as a C multi-line comment,
 to indicate how the file should be correctly compiled - if desired, this output
-can be suppressed, and the file compiled manually. The vulnspec command line
+can be suppressed and the file compiled manually. The vulnspec command line
 tool additionally contains the `build` sub-command, which reads the build
 commands from a synthesised C file and runs them automatically.
 
@@ -1483,7 +1479,7 @@ to run their challenges in, without having to deal with complex dependencies or
 setups.
 
 The setup of the image is rather typical, however, the process allows creating
-a number of pre-defined setups for running the challenge binary. These setups
+a collection of pre-defined setups for running the challenge binary. These setups
 are identified by a 3-tuple `<access>-<interface>-<method>`.
 
 The `access` determines how the challenge can be accessed, specifically:
@@ -1517,21 +1513,21 @@ solvable. If a challenge is broken, it should be detected early on in the
 development process, to allow the challenge designer time to amend it.
 The widely accepted solution is to automate this, by requiring that all
 challenges provide a solver script to automatically extract the flag from a
-challenge so that verification is easy, and regressions can be tracked over time.
+challenge so that verification is easy and regressions can be tracked over time.
 
-However, doing this with automatically generated challenges is difficult, and
-is one of the main obstacles (**citation needed**) to deploying a system like
-this in an academic setting. Challenges must all be solvable, and the
-difficulty (by measuring the complexity of the solution) must remain *at least*
-roughly the same, or the marks for the module will be skewed unfairly.
+However, doing this with automatically generated challenges is difficult and is
+one of the main obstacles (**citation needed**) to deploying a system like this
+in an academic setting. Challenges must all be solvable and the difficulty (by
+measuring the complexity of the solution) must remain *at least* roughly the
+same, or the marks for the module will be skewed unfairly.
 
 To resolve this, along with automatic challenge synthesis, we provide solution
 script synthesis as part of environment generation. While it would be possible
 to define a single solve script for each specification, that takes into
 consideration all possible randomisations, writing such a script would be
 unnecessarily quite challenging. Instead, we allow templating the script with
-a number of special variables, with values known and derived during the
-synthesis process, which are unavailable to challenge solvers.
+several special variables, with values known and derived during the synthesis
+process that are unavailable to challenge solvers.
 
 These template values include:
 
@@ -1539,11 +1535,11 @@ These template values include:
 - `gen_names`, the translated names of blocks and variables
 - `gen_templates`, the instantiated values of templates
 - `gen_var_locations`, locations of variables (extracted from DWARF debugging
-  data), which can be used to calculate exact offsets between variables
+  data) that can be used to calculate exact offsets between variables
 
 These challenge scripts can be run against the produced binaries to check that
-they correctly output a flag - this is actually the same technique we used to
-confirm the validity of out example specifications.
+they correctly output a flag - this is the same technique we used to confirm
+the validity of out example specifications.
 
 These solution scripts have a number of uses: they could use to validate
 synthesised challenges as explained above, they could be given as
@@ -1553,8 +1549,8 @@ reliability.
 
 # Results
 
-To judge the success of the project, and the validity of the overall design
-goals, we designed a small reverse-engineering challenge using vulnspec, and
+To judge the success of the project and the validity of the overall design
+goals, we designed a small reverse-engineering challenge using vulnspec and
 attached it to a small player survey to evaluate the challenges, what they
 thought of them, and how much they had learned from them.
 
@@ -1565,16 +1561,16 @@ together to produce the full flag. The specifications for these are listed in
 [Appendix X](#appendix-x), along with the full contents of the survey, and are
 also present in the `examples/server/` directory in the codebase.
 
-To properly randomise these challenges, and collect results from the survey, we
-built a small dockerized web application to use the `vulnspec` library to
+To properly randomise these challenges and to collect results from the survey,
+we built a small dockerized web application to use the `vulnspec` library to
 synthesise and build individualised challenges for each user based on a
 randomly generated user id stored as cookie. Additionally, the web app collects
-survey responses, and saves them to a PostgreSQL database, which is managed and
+survey responses, saving them to a PostgreSQL database, which is managed and
 interfaced with using a Directus dashboard.
 
-The challenges and survey were open for a little over a week, and throughout
-it's duration collected X responses. While obviously insufficient to draw
-strong conclusions, there are some clear trends in the data.
+The challenges and survey were open for a little over a week and throughout
+its duration collected X responses. While insufficient to draw strong
+conclusions, there are some clear trends in the data.
 
 ...
 
@@ -1592,19 +1588,20 @@ TODO
 
 ## Future work
 
-Unfortunately, due to time constraints, not every possible feature was able to
-make it in to the final result. With more time to complete the project, there
-would be plenty of future opportunities for expanding and improving the
-technique of challenge generation found in this report.
+Unfortunately, due to time constraints, not every desired feature made it in to
+the final result. With more time to complete the project, there would be plenty
+of future opportunities for expanding and improving the technique of challenge
+generation found in this report.
 
-One major area that could use more work would be in the random variation of theming -
-currently, the challenge designer still requires writing context code instead
-of just the vulnerability description. Ideally, more powerful random generation
-could synthesise code into a number of "scenarios", selecting NOPs, interfacing
-"glue" code, and input and output strings based on this scenario. For example,
-scenarios could include a fake network protocol, or a stock checker
-command-line tool, or any common CTF scenario. Vulnerabilities could then be
-integrated into these pre-built scenarios, to provide themed variations.
+One major area that could use more work would be in the random variation of
+theming - currently, the challenge designer still requires writing context code
+instead of just the vulnerability description. Ideally, more powerful random
+generation could synthesise code into a handful of "scenarios", selecting NOPs,
+interfacing with "glue" code, and create input and output strings based on this
+scenario. For example, scenarios could include a fake network protocol, or a
+stock checker command-line tool, or any common CTF scenario. Vulnerabilities
+could then be integrated into these pre-built scenarios, to provide themed
+variations.
 
 To further improve the random variation of challenges, it would be nice to
 integrate the LLVM patches built as part of Blinker [@blinker] to produce more
@@ -1614,23 +1611,22 @@ well as a third layer in the process, as binary-level randomisation after
 source-level randomisation.
 
 Another area for improvement is in NOP generation; in the current version, NOPs
-must all be written by hand, and cannot have large side-effects, since those
+must all be written by hand and cannot have large side-effects, since those
 influence the effectiveness of solve scripts. One possibility for automatically
 generating NOPs would involve scanning existing codebases for small snippets of
-code and including them, and using symbolic analysis with angr [@angr-paper]
+code and including them, using symbolic analysis with angr [@angr-paper]
 to produce automatic solves for those sections. This improvement would lead to
-almost a middle-ground between randomly varying safe codebases, and using a
+almost a middle-ground between randomly varying safe codebases and using a
 pure-specification driven approach, using other codebases for their code as
 well as for their variable and function naming conventions.
 
-Finally, for an approach like this to really take off, it requires integration
-into other pieces of software. While I've already integrated it into a mini
-custom CTF platform for the purpose of gathering data with a survey,
-integration into other widespread platforms such as CTFd [@ctfd],
-probably along with some companion software to facilitate challenge and flag
-generation and checking. Additionally, IDE support with syntax checking, and
-error and warning integration with a language server [@language-server-protocol] would help
-to improve adoption and usability.
+Finally, for an approach like this to take off, it requires integration into
+other pieces of software. While already integrated into a mini custom CTF
+platform for the purpose of gathering data with a survey, integration with
+other widespread platforms such as CTFd [@ctfd] would decrease friction in
+adopting vulnspec. Additionally, IDE support with syntax checking and error
+and warning integration with a language server [@language-server-protocol]
+would help to improve adoption and usability.
 
 # References
 
@@ -1707,10 +1703,10 @@ block makeflag {
 }
 ```
 
-To check that flags are valid, and prevent invalid submissions, we check that
+To check that flags are valid and prevent invalid submissions, we check that
 in the flag `FLAG{m_n}`, where `m` and `n` are integers, that `n = 2 * m + 42`.
 Because the specification is hidden to players, they would have to generate a
-number of challenges multiple times to extract the technique by which this
+large variety of challenges many times to extract the technique by which this
 checksum is calculated.
 
 ### Index page
