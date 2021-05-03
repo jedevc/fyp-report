@@ -7,12 +7,13 @@ wordcount: 9999
 
 abstract: |
   Capture the Flag competitions are rapidly increasing in popularity as a
-  method for learning about cybersecurity, however, running these competitions
-  is time-consuming and difficult to manage, due to the need to produce new and
-  interesting challenges.
+  technique for learning and teaching computer security, however, they
+  are time-consuming and difficult to manage, due to the need to
+  produce new and interesting challenges, and the inability to detect
+  widespread cheating.
 
   In this report, we present a Domain-Specific Programming language for rapidly
-  designing and producing randomized C-based reverse-engineering and pwnable
+  designing and producing randomised C-based reverse-engineering and pwnable
   challenges. We also introduce a new technique for automatically varying the
   semantic structure of specifications, over both the spatial domain of memory
   and the temporal domain of the call flow graph.
@@ -52,10 +53,27 @@ header-includes:
 
 # Introduction
 
-... explaining CTFs
+The field of computer security is a fairly recent invention, really only drawn
+to the forefront of computer science interest in 1967 with Willis Ware's paper
+Security and Privacy in Computer Systems [@security-privacy]. Since then,
+computer security has been a constant back-and-forth between attackers seeking
+to gain unauthorised access to systems, and defenders working to patch and
+protect those systems.  However, as the field has grown, the need for more and
+more security professionals, researchers, students and enthusiasts has grown in
+order to continue to protect our increasingly heavily networked world.
+
+To provide a safe and moderated environment in which to practice and develop
+these skills, Capture the Flag events were introduced, in which the goal is to
+obtain flags, which are "secrets hidden in purposefully-vulnerable programs or
+websites." In these events, "competitors steal flags either from other
+competitors (attack/defence-style CTFs) or from the organisers (jeopardy-style
+challenges)." [@wiki-ctf] In this protected environment, hackers can explore
+new and interesting vulnerabilities, improving their skills and sharing their
+knowledge with the community, while not breaking any of the laws surrounding
+unauthorised access to computer systems.
 
 Additionally, the academic use of jeopardy-style CTFs in learning environments
-has been extensively recognized, with inter-university competitions such as C2C
+has been extensively recognised, with inter-university competitions such as C2C
 [@c2c], Inter-Ace [@interace] and it's many spiritual successors such as HECC
 [@hecc], attracting a wide-array of industry sponsorship and interest including
 from government institutions. CTFs have also seen use in classroom settings,
@@ -66,26 +84,26 @@ school level with NCSC-supported programs such as CyberFirst [@cyberfirst].
 However, while CTFs have become more and more widespread, few innovations have
 changed how they are fundamentally run - while a number of software platforms
 for hosting scoreboard software have been developed, very little effort has
-been made to standardize the process by which challenges are developed and
+been made to standardise the process by which challenges are developed and
 hosted. This means that for every CTF, challenges must be painstakingly
 developed one-by-one, with little ability to reuse challenges from previous
 competitions. Cheating in the form of "flag-sharing" has also become an
 increasing cause for concern, with this allowing teams to gain unfair
-advantages, or students to plagarize results, while remaining difficult to
-detect by organizers.
+advantages, or students to plagiarise results, while remaining difficult to
+detect by organisers.
 
-One approach taken by many competitions is to introduce flag randomization, so
+One approach taken by many competitions is to introduce flag randomisation, so
 that flags valid for one team/individual are not valid for others. Recent
 innovations have led to the extension of this approach to introduce random
 variation into the structure of the challenges themselves, so that each team
 receives it's own unique copy of the challenge, and challenges can even be
 reused between yearly competitions.
 
-In this report, we present our take on challenge randomization, specifically in
+In this report, we present our take on challenge randomisation, specifically in
 relation to binary-focused challenges. We introduce `vulnspec`, a
 Domain-Specific programming language with the ability to easily encode
 vulnerabilities and functionality for powerful memory layout and control flow
-graph randomization and manipulation. We explain both the design and
+graph randomisation and manipulation. We explain both the design and
 implementation decisions as well as the technical details of our approach, and
 evaluate our success using a mini-CTF and survey to get player's opinions of
 the generated challenges.
@@ -101,9 +119,9 @@ single solution.
 This binary suffers from a lack of exploit variety, leading to an increased
 opportunity for CTF players to illegally share solutions. Some significant
 effort has been made to prevent this form of cheating, preventing flag-sharing
-by randomizing flags, and has shown successful results - however, some cheating
+by randomising flags, and has shown successful results - however, some cheating
 may still go unnoticed, due to the more complex "solve-sharing", in which
-players share detailed writeups or solve scripts with each other, allowing them
+players share detailed write-ups or solve scripts with each other, allowing them
 to gain different flags, but using the same technique. We want to provide a way
 to mitigate against this more advanced form of cheating.
 
@@ -134,7 +152,7 @@ ability of those teams to share flags and solutions. This was effective
 throughout the competition, and allowed greater insight into who was cheating,
 how they were doing it, and the source of the leak.
 
-AutoCTF [@autoctf], a weeklong event using challenges built using the LAVA bug
+AutoCTF [@autoctf], a week-long event using challenges built using the LAVA bug
 injection system [@autoctf-lava] is one of the main and most popular instances
 of automatic challenge generation. Their findings included that such a tool
 could be (and was) used to massively reduce competition overhead and cost of
@@ -151,7 +169,7 @@ the content of each VM, to ensure that each student/player receives a different
 setup. Additionally, these challenges are themed, providing a consistent
 "feeling" to each VM, emphasising the importance of visual similarity.
 
-Finally, Blinker [@blinker] creates randomized binary challenges using ERB ruby
+Finally, Blinker [@blinker] creates randomised binary challenges using ERB ruby
 templating of source files and LLVM integration to provide variation at the
 binary level, and uses these tools in a CTF competition to evaluate it's
 success. In particular, this technique has inspired our work, however, the
@@ -177,10 +195,10 @@ designing exploitable challenges.
 ## Goals
 
 The `vulnspec` language and tooling has been built to satisfy a number of
-design goals, that have been criticial in choosing which functionality to
-prioritize building and implementing. In these goals, we consider three main
+design goals, that have been critical in choosing which functionality to
+prioritise building and implementing. In these goals, we consider three main
 parties: the challenge designer, the challenge solver, and the competition
-organizer.
+organiser.
 
 The challenge creator should be able to:
 
@@ -198,7 +216,7 @@ Then, the challenge solver should:
 - Likewise, both challenges should appear visually different, with different
   program structure, variable names, etc.
 
-Finally, the competition organizer (or in an academic setting, the module
+Finally, the competition organiser (or in an academic setting, the module
 leader) should be able to:
 
 - Automatically check that generated challenges are solvable.
@@ -311,7 +329,7 @@ In the above:
 - `a` is forced to be a global variable, and to appear in either the `.data` or
   `.bss` section of the binary
 - `b` is forced to be a local variable, and to appear as part of a stack frame
-- `c` will be only initialized once, no matter whether it is local or global
+- `c` will be only initialised once, no matter whether it is local or global
 - `f` is forced to be inlined into all blocks that call it
 - `g` is forced to be a separate function, and function called by all blocks
   that call it
@@ -383,8 +401,8 @@ have to. For more information, see **[External Library Integration](#external-li
 An annotated simplified EBNF grammar is defined below.
 
 This grammar isn't quite complete, mostly for simplicity, and ignores
-whitespace, as well as newlines, as well as a couple of other minor constructs
-and hacks used to optimize and clarify the implementation of the parser.
+white-space, as well as newlines, as well as a couple of other minor constructs
+and hacks used to optimise and clarify the implementation of the parser.
 
 ```
 (* a specification is a series of high-level pieces *)
@@ -477,11 +495,11 @@ boolean = "true" | "false"
 In this chapter, we present how the above design goals and specification is
 implemented to produce the vulnspec synthesis tool. The tool is implemented in
 around 8000 lines of Python code, and includes a lexer and parser written from
-scratch, a minimal type checking system, libc integration, randomization
+scratch, a minimal type checking system, libc integration, randomisation
 procedures and final challenge generation and output.
 
 The structure of this section mirrors the pipeline laid out in the **Stages**
-section above, and moves from the plaintext vulnspec specification to the final
+section above, and moves from the plain-text vulnspec specification to the final
 challenge binaries and environments.
 
 ## Lexical analysis and parsing
@@ -518,7 +536,7 @@ defining a wide variety of unary and binary operators, many of which have
 similar prefixes. For each individual atomic language feature, we produce a
 token object, containing a type, a possible lexeme (which represents the data
 read), and a position and length of the token (which are pretty-printing error
-messages later if neccessary).
+messages later if necessary).
 
 In our example:
 
@@ -548,12 +566,12 @@ structures in the language entirely predictively and so some backtracking is
 required. For example, when parsing an expression, it may end with an array
 index - so we can attempt to parse that, but it may fail, and so we backtrack
 to before we tried. Similarly, when attempting to parse a statement, there are
-two possiblities, an lvalue on the left of an assignment, or an expression as
-part of an expression statement. There's no way with $k$ steps of lookahead to
+two possibilities, an lvalue on the left of an assignment, or an expression as
+part of an expression statement. There's no way with $k$ steps of look-ahead to
 work out which one is which, so we try one, then the other, using backtracking.
 It's certainly possible to reduce the current grammar to an $LL(k)$ one and so
 allow parsing in linear time with predictive parsing, but since most
-specifications are quite small, it felt like an unneccessary optimization, when
+specifications are quite small, it felt like an unnecessary optimisation, when
 other features needed development.
 graph
 At the end of parsing, we produce an Abstract Syntax Tree for the entire
@@ -567,7 +585,7 @@ After constructing an Abstract Syntax Tree from the original stream of data, we
 need some way of semantically validating it, to ensure that the challenge
 designer has not made mistakes that would cause problems in later stages (such
 as using undeclared variables) or would generate invalid C code output (such as
-declaring variables to be of a non-existant type). To perform this
+declaring variables to be of a non-existent type). To perform this
 verification on the tree, we use a simple type-checking system.
 
 Essentially, we traverse the tree using a visitor pattern, at each level
@@ -595,16 +613,16 @@ respective abstract types. **more elaboration**
 When checking for compatibility between two types, it's not sufficient
 to check that a type is identical to another type, like in more strongly-typed
 languages; instead we need to verify that a type can be used in the context of
-another type. For example, in C, integers are effectively used as booleans,
+another type. For example, in C, integers are effectively used as Boolean,
 pointers are used as integers, etc. To help express this, we construct a
 directed meta-type graph, with the vertices as meta-types, and the edges as
 valid implicit conversions:
 
 ![Meta-type graph](assets/diagrams/meta_types/graph.svg){ width=50% }
 
-Then, the question of compability simply becomes one of reachability, i.e. to
-use type $A$ in the context of type $B$, the metatype of $B$ must be reachable
-on a path reachable from the metatype of $A$.  Using this, we can define an
+Then, the question of compatibility simply becomes one of reachability, i.e. to
+use type $A$ in the context of type $B$, the meta-type of $B$ must be reachable
+on a path reachable from the meta-type of $A$.  Using this, we can define an
 additional notion of type checking, called "fuzzy" typing. This technique
 allows easily checking adding an integer to a float, and converting between
 pointers, but requires extra thought when trying to perform unsafe operations,
@@ -674,7 +692,7 @@ As such, we provide a utility to generate listings of all functions, variables
 and types in libc, which can then be referenced using a special syntax from
 vulnspec specifications. This utility is bundled along with the
 `builtin_generator` tool which is used to generate primitive types and the
-metatype graph from the previous section.
+meta-type graph from the previous section.
 
 In the `config.yaml` in the builtins directory, in addition to all the fields
 [already detailed](#type-checking), we introduce a `libraries` key which
@@ -709,7 +727,7 @@ Each field's purpose is shown below:
 
 Note that we use the more lightweight libmusl, as opposed to the more common
 and frequently used glibc. We expected that libmusl would prove simpler to
-programatically analyze, with fewer internal complex dependencies, and
+programatically analyse, with fewer internal complex dependencies, and
 empirical tests confirmed this. Since the process mostly only extracts the
 public functions of the library, all results from libmusl are transferrable to
 when we use glibc (which is what we use for testing).
@@ -748,7 +766,7 @@ by appending `"@<lib>.<header-name>"` - e.g. `printf` becomes
 `printf@libc.stdio`. We also translate each C-style type signature into a
 vulnspec-style type, using a stack model (**More elaboration needed**). We can
 then write these to JSON files, ready for use in processing specifications that
-utilize libraries.
+utilise libraries.
 
 ## Translation
 
@@ -769,7 +787,7 @@ described **later**.
 
 To perform the translation process, vulnspec uses a similar visitor pattern to
 during type checking. However, instead of returning a type labelling for each
-node, we return a new node that has been translated. The domain and codomain of
+node, we return a new node that has been translated. The domain and co-domain of
 this transformation are completely separate (except for explicitly labelled
 types), and the nodes used to represent the block-chunk graph are similar but
 unique to the ones in the tree. They are also, in a number of cases, simpler,
@@ -802,7 +820,7 @@ abstract representation of the graph of blocks and chunks can be translated
 down into low-level C primitives. Mechanically, this reduces to deciding where
 in memory each chunk should be placed, and deciding the process by which each
 block can be called. We call each collection of decisions an "interpretation",
-the results of which are executed by an "interpeter" modifying the graph.
+the results of which are executed by an "interpreter" modifying the graph.
 
 The output of this process is a new graph, represented by a "program" object,
 which contains a collection of functions (with their own arguments, local
@@ -839,7 +857,7 @@ Chunks can be assigned:
   function, or,
 - A global interpretation, where the chunk is allocated into global memory.
 
-Note that this list of interpretations is not neccessarily the maximum number
+Note that this list of interpretations is not necessarily the maximum number
 of possible interpretations. For example, it would be possible to define
 another interpretation for chunks, e.g. heap allocated chunks, or a struct that
 wraps all the individual variables together. This behaviour is not implemented
@@ -1131,7 +1149,7 @@ variable is globally accessible). From this, we want to compute how to get $u$
 from the new maximal, which is calculated as $u - m$, or the combination of the
 old usage capture with the inverse of the maximal.
 
-### Finalization
+### Finalisation
 
 In the final stage, having translated all statements and expressions in each
 block correctly, we can now translate the final remaining blocks into
@@ -1149,7 +1167,7 @@ and external variables, into a program object, which represents the end product
 of interpretation. This can then be traversed later during code generation to
 produce fully valid and vulnerable C code!
 
-## Randomization
+## Randomisation
 
 An important aspect of vulnspec is to allow generating different programs that
 all contain the same described vulnerability. While during the interpretation
@@ -1172,7 +1190,7 @@ also look significantly different.
 
 ### NOPs
 
-One of the most significant techniques for providing powerful randomization are
+One of the most significant techniques for providing powerful randomisation are
 the introduction of No-Operation blocks (shortened to NOPs), which provide
 variance across the temporal domain.
 
@@ -1193,7 +1211,7 @@ these could appear inline, or alternatively, as their own functions.
 ![Blocks after NOP insertion](assets/diagrams/nops/graph2.svg)
 
 All NOPs are defined in the `vulnspec/data/nops/` folder, as individual blocks
-with a `nop` constraint to mark that they should be parsed and be avaiable for
+with a `nop` constraint to mark that they should be parsed and be available for
 random selection. For example, a simple `log` NOP:
 
 ```
@@ -1204,7 +1222,7 @@ block (nop) log {
 
 Introducing NOPs is slightly more complex than detailed above, especially when
 the NOP makes references to other blocks, chunks or externs. To solve this,
-when initializing the collection of NOPs, we traverse each NOP, exploring it's
+when initialising the collection of NOPs, we traverse each NOP, exploring it's
 connection to other blocks (including other NOPs, which is valid), as well as
 it's variable references. Then, when we introduce a NOP into the block-chunk
 graph, we also have to include all the blocks, chunks and externs that it
@@ -1254,7 +1272,7 @@ same value later to create a single NULL-byte overflow, which could be used as
 part of an RCE exploit.
 
 While templates are defined as abstract values, we can also use them inside C
-literal expressions and statements, which allow us to perform complex randomization
+literal expressions and statements, which allow us to perform complex randomisation
 inside parts of the program which cannot be defined in vulnspec due to the
 limitations of the language.
 
@@ -1285,7 +1303,7 @@ For our purposes, we define a Markov chain model as a mapping from $k$-length
 strings to a weighted list of characters. From this, we can traverse over the
 mapping, to produce a final word. The algorithm is described as follows:
 
-- Initialize $s$ to the empty string
+- Initialise $s$ to the empty string
 - Loop:
   - Take the $k$ last characters of $s$ (if the length of $s$ is less than $k$
     left-pad it with the empty character)
@@ -1304,10 +1322,10 @@ To generate names with this algorithm, we produce two separate models, one to
 create variable names (of length in the range 1 - 12) and another to create
 function names (of length in the range 3 - 12). The variable model is trained
 on the global and local variable names in `libmusl`, while the function model
-is trained on the function defintion and prototype names.
+is trained on the function definition and prototype names.
 
 All strings $s$ that are generated by this algorithm have the useful feature
-that every substring of length $k + 1$ in $s$ is present somewhere in a name in
+that every sub-string of length $k + 1$ in $s$ is present somewhere in a name in
 the source content of libc. As the value of $k$ increases, the outputs become
 increasingly similar to the source material, as shown in the following table
 
@@ -1326,7 +1344,7 @@ low enough to provide some variety, and high enough to enforce some sense of
 consistency. To do this, we settle on an approach that allows us to select
 *multiple* values of $k$, using what we call a "Multi" Markov chain model.
 
-In this model, we create submodels for $k = 1$, $k = 2$, etc. up to $k = n$.
+In this model, we create sub-models for $k = 1$, $k = 2$, etc. up to $k = n$.
 Then when generating a new character we randomly select a model using a
 triangular distribution to weight towards where $k = \frac{n}{2}$. If we
 discover that we can't find the suffix in the selected model, we continue to
@@ -1344,14 +1362,14 @@ iterate over each tag, counting the number of times that a $k$-length prefix
 produces a given character. From this, we can produce a weighted list, and so
 generate the model described above.
 
-To optimize picking from the weighted list, instead of storing the individual
+To optimise picking from the weighted list, instead of storing the individual
 weight of each possibility, we store the cumulative weight of all possibilities
 so far. This allows us to select randomly from the list using linear search in
 $O(\log n)$ time, instead of the naive linear search which takes $O(n)$.
 
 ## Code generation
 
-With all blocks and chunks constrainted and properly interpreted, and the
+With all blocks and chunks constrained and properly interpreted, and the
 entire Abstract Syntax Graph rewritten into C-style constructs, we can now
 generate C code.
 
@@ -1429,14 +1447,14 @@ of essential compiler software), will produce an exploitable binary.
 
 By default, compiler options are added to suppress addition of useful security
 protections, such as NX, PIE and RELRO. These options must manually be enabled,
-essentially requiring the challenge designer to conciously make the challenge
+essentially requiring the challenge designer to consciously make the challenge
 more difficult by enabling new protections.
 
-These build commands are prefixed to the file output as a C multiline comment,
+These build commands are prefixed to the file output as a C multi-line comment,
 to indicate how the file should be correctly compiled - if desired, this output
 can be suppressed, and the file compiled manually. The vulnspec command line
-tool additionally contains the `build` subcommand, which reads the build
-commands from a synthesized C file and runs them automatically.
+tool additionally contains the `build` sub-command, which reads the build
+commands from a synthesised C file and runs them automatically.
 
 ```c
 /*
@@ -1458,7 +1476,7 @@ Docker is an open-source tool providing paravirtualization to deliver and run
 applications along with their environments in fully complete *containers*
 (**reference needed**). Each container is based off of an *image*, which are
 built using commands from a Dockerfile. By having vulnspec output a Dockerfile,
-we can create an easily replicable environment for CTF organizers and players
+we can create an easily replicable environment for CTF organisers and players
 to run their challenges in, without having to deal with complex dependencies or
 setups.
 
@@ -1508,8 +1526,8 @@ roughly the same, or the marks for the module will be skewed unfairly.
 To resolve this, along with automatic challenge synthesis, we provide solution
 script synthesis as part of environment generation. While it would be possible
 to define a single solve script for each specification, that takes into
-consideration all possible randomizations, writing such a script would be
-unneccessarily quite challenging. Instead, we allow templating the script with
+consideration all possible randomisations, writing such a script would be
+unnecessarily quite challenging. Instead, we allow templating the script with
 a number of special variables, with values known and derived during the
 synthesis process, which are unavailable to challenge solvers.
 
@@ -1523,11 +1541,11 @@ These template values include:
 
 These challenge scripts can be run against the produced binaries to check that
 they correctly output a flag - this is actually the same technique we used to
-confirm the validitity of out example specifications.
+confirm the validity of out example specifications.
 
 These solution scripts have a number of uses: they could use to validate
-synthesized challenges as explained above, they could be given as
-individualized example solutions, or they could be used in a production setup
+synthesised challenges as explained above, they could be given as
+individualised example solutions, or they could be used in a production setup
 to continuously test that a challenge continues to work over time, improving
 reliability.
 
@@ -1545,9 +1563,9 @@ together to produce the full flag. The specifications for these are listed in
 [Appendix X](#appendix-x), along with the full contents of the survey, and are
 also present in the `examples/server/` directory in the codebase.
 
-To properly randomize these challenges, and collect results from the survey, we
+To properly randomise these challenges, and collect results from the survey, we
 built a small dockerized web application to use the `vulnspec` library to
-synthesize and build individualized challenges for each user based on a
+synthesise and build individualised challenges for each user based on a
 randomly generated user id stored as cookie. Additionally, the web app collects
 survey responses, and saves them to a PostgreSQL database, which is managed and
 interfaced with using a Directus dashboard.
@@ -1580,7 +1598,7 @@ technique of challenge generation found in this report.
 One major area that could use more work would be in the random variation of theming -
 currently, the challenge designer still requires writing context code instead
 of just the vulnerability description. Ideally, more powerful random generation
-could synthesize code into a number of "scenarios", selecting NOPs, interfacing
+could synthesise code into a number of "scenarios", selecting NOPs, interfacing
 "glue" code, and input and output strings based on this scenario. For example,
 scenarios could include a fake network protocol, or a stock checker
 command-line tool, or any common CTF scenario. Vulnerabilities could then be
@@ -1588,10 +1606,10 @@ integrated into these pre-built scenarios, to provide themed variations.
 
 To further improve the random variation of challenges, it would be nice to
 integrate the LLVM patches built as part of Blinker [@blinker] to produce more
-binary-level variations such as randomizing table orders, function layouts and
+binary-level variations such as randomising table orders, function layouts and
 exact instructions and registers used to perform operations. This would work
-well as a third layer in the process, as binary-level randomization after
-source-level randomization.
+well as a third layer in the process, as binary-level randomisation after
+source-level randomisation.
 
 Another area for improvement is in NOP generation; in the current version, NOPs
 must all be written by hand, and cannot have large side-effects, since those
