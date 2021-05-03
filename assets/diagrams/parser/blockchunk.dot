@@ -1,0 +1,12 @@
+digraph BlockChunkGraph{
+"x"[shape=note, label="int x"];
+subgraph clusterChunk0{
+style="dotted,bold";
+}
+"main";
+"main1";
+"main" -> "main1";
+"main" -> "printf@libc.stdio"[style=dotted];
+"main" -> "x"[style=dotted];
+"main1" -> "x"[style=dotted];
+}

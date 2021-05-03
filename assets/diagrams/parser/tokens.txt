@@ -1,0 +1,9 @@
+<Reserved "chunk">, <Name "x">, <Colon>, <Name "int">, <Assign>, <Integer ["0", 10]>, <Newline>
+<Reserved "block">, <Name "main">, <BraceOpen>, <Newline>
+<Reserved "while">, <Name "x">, <CompareLT>, <Integer ["10", 10]>, <BraceOpen>, <Newline>
+<Name "printf@libc.stdio">, <ParenOpen>, <String "Hello world! %d\n">, <Comma>, <Name "x">, <ParenClose>, <Newline>
+<Ellipsis>, <Newline>
+<Name "x">, <Assign>, <Name "x">, <Plus>, <Integer ["1", 10]>, <Newline>
+<BraceClose>, <Newline>
+<BraceClose>, <Newline>
+<EOF>

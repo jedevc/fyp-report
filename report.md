@@ -577,7 +577,7 @@ graph
 At the end of parsing, we produce an Abstract Syntax Tree for the entire
 specification, which can now be traversed and manipulated in later stages.
 
-![Abstract Syntax Tree diagram](assets/diagrams/parser/graph.svg)
+![Abstract Syntax Tree diagram](assets/diagrams/parser/ast.svg)
 
 ## Type checking
 
@@ -793,6 +793,8 @@ types), and the nodes used to represent the block-chunk graph are similar but
 unique to the ones in the tree. They are also, in a number of cases, simpler,
 not encoding the complexity of different literal values, and simplifying some
 nodes away into other constructs.
+
+![Overview of an example block-chunk graph](assets/diagrams/parser/blockchunk.svg)
 
 Most nodes have a one-to-one correspondence in the block-chunk graph, however,
 a number of the translations are slightly more complex:
