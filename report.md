@@ -838,7 +838,7 @@ instead in multiple small pieces that get it closer to the goal.
 
 The most important step in the interpretation process is to remove the concepts
 of blocks and chunks almost entirely from the program. These are vulnspec
-concepts, and do not translate nicely down into C code.
+concepts, and do not translate directly down into C code.
 
 Block represent lines of code, and calls represent the relationship between
 them, while chunks represent variables appearing next to each other in
@@ -867,11 +867,11 @@ in vulnspec, however, the mechanisms for interpreting it would be very similar
 to the details explained in this section.
 
 The challenge designer can force one of the interpretations, using a block or
-chunk constraint, as explained earlier in **somewhere**. If a constraint has
-not been specified, then an interpretation is randomly selected. The only
-exception here is the `main` block, which must always have a function
-interpretation, since it is the entrypoint to the program, and so cannot appear
-inline.
+chunk constraint, as explained earlier in **[Blocks and Chunks](#blocks-and-chunks)**.
+If a constraint has not been specified, then an interpretation is randomly
+selected. The only exception here is the `main` block, which must always have a
+function interpretation, since it is the entrypoint to the program, and so
+cannot appear inline.
 
 After all blocks and chunk have been assigned an interpretation, we can begin
 to apply those through all statements in the specification. We do this in two
