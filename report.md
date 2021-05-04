@@ -1627,11 +1627,21 @@ environment.
 
 # Conclusion
 
-TODO
+In drawing to a close, we can see that vulnspec, and it's related goals and
+ideas have a place in CTF competitions and academic modules.
 
-## Evaluation
+...
 
-TODO
+As individuals writing challenges, we've found that using vulnspec as opposed
+to directly utilizing C-primitives has been incredibly valuable, especially
+regarding the firm guarantees that vulnspec provides regarding memory layout
+and variable accesses. These features have helped us to quickly develop a
+variety of examples quickly that are suitable for learners of low-level
+analysis.
+
+In the future, we hope to continue to develop and use the tools developed as
+part of this project, and hopefully extend them to an even wider variety of
+challenge types and areas.
 
 ## Future work
 
@@ -1675,6 +1685,38 @@ adopting vulnspec. Additionally, IDE support with syntax checking and error
 and warning integration with a language server [@language-server-protocol]
 would help to improve adoption and usability.
 
+## Evaluation
+
+With the power of hindsight, there are a number of areas throughout the
+project, that could have benefited from a more thorough design process, earlier
+on in the year.
+
+Firstly, despite how interesting and useful it was to develop a lexer and
+parser from scratch, in the future it would be better to use a parser generator
+such as Flex/Bison, to more easily scale up to new syntax. Alternatively, a
+different language choice, such as Rust, would allow for a more combinatorial
+approach to parsing due to many of the functional abilities of the language.
+Unfortunately, parsers from scratch scale poorly, and the limits of that
+approach were definitely tested towards the end of the project.
+
+Regarding type checking, it would have been useful to derive a more powerful
+model, perhaps by integrating with LLVM or GCC to provide deeper insights into
+C-types, without needing to create our own model. However, the model used is
+interesting to use, and we hope further applications of the model can be found
+in simple type checking.
+
+In the area of interpretation, it would have been excellent to have been able
+to spend more time working in this area, perhaps by reducing the complexity of
+transformation from the AST to the ASG which limited ability to quickly
+innovate and make dramatic changes to the structure of the language. This is
+clearly the area of most of our innovation, so it would have been interesting
+to explore this area more.
+
+However, many of these changes are relatively minor, and we believe that our
+general approach has been successful, and that as a result, we have contributed
+to the total knowledge surrounding the area of automatic challenge design and
+synthesis.
+
 # References
 
 ::: {#refs}
@@ -1683,6 +1725,76 @@ would help to improve adoption and usability.
 # Appendices
 
 ## Appendix X (Command line help pages)
+
+The main tool help:
+
+```
+usage: vulnspec [-h] {synth,build,strip,environ} ...
+
+positional arguments:
+  {synth,build,strip,environ}
+    synth               synthesize a specification into C code
+    build               execute the build commands in a C file header
+    strip               strip out the build commands in a C file header
+    environ             synthesize a specification into an environment
+
+optional arguments:
+  -h, --help            show this help message and exit
+```
+
+The basic synthesis tool help:
+
+```
+usage: vulnspec synth [-h] [--seed SEED] [--template TEMPLATE]
+                      [--no-file-comment]
+                      [--format {none,llvm,google,chromium,mozilla,webkit}]
+                      [--dump-tokens DUMP_TOKENS] [--dump-ast DUMP_AST]
+                      [--dump-ast-diagram DUMP_AST_DIAGRAM]
+                      [--dump-block-graph DUMP_BLOCK_GRAPH]
+                      [--dump-block-chunk-graph DUMP_BLOCK_CHUNK_GRAPH]
+                      inpath outpath
+
+positional arguments:
+  inpath
+  outpath
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --seed SEED           random seed to use
+  --template TEMPLATE   preset value of a template
+  --no-file-comment     don't create a file header comment
+  --format {none,llvm,google,chromium,mozilla,webkit}
+                        coding style to output
+  --dump-tokens DUMP_TOKENS
+  --dump-ast DUMP_AST
+  --dump-ast-diagram DUMP_AST_DIAGRAM
+  --dump-block-graph DUMP_BLOCK_GRAPH
+  --dump-block-chunk-graph DUMP_BLOCK_CHUNK_GRAPH
+```
+
+The environment synthesis tool help:
+
+```
+usage: vulnspec environ [-h] [--seed SEED] [--template TEMPLATE] [--solution]
+                        [--extra EXTRA] [--extra-src]
+                        [--format {none,llvm,google,chromium,mozilla,webkit}]
+                        inpath outpath
+
+positional arguments:
+  inpath
+  outpath
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --seed SEED           random seed to use
+  --template TEMPLATE   preset value of a template
+  --solution            generate a solution using a .solve.py file
+  --extra EXTRA         extra files to include in the environment
+  --extra-src           include generated source code in the environment
+  --format {none,llvm,google,chromium,mozilla,webkit}
+                        coding style to output
+```
+
 ## Appendix X (Environment configuration options)
 ## Appendix X (Survey)
 
