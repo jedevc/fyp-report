@@ -61,60 +61,58 @@ header-includes:
 
 # Introduction
 
-The field of computer security is a fairly recent invention, really only drawn
-to the forefront of computer science interest in 1967 with Willis Ware's paper
-Security and Privacy in Computer Systems [@security-privacy]. Since then,
-computer security has been a constant back-and-forth between attackers seeking
-to gain unauthorised access to systems and defenders working to patch and
-protect those systems. However, as the field has grown, the need for more and
-more security professionals, researchers, students and enthusiasts has grown to
-continue to protect our increasingly heavily networked world.
+The field of computer security is a fairly recent invention, really only
+brought to interest in 1967 with Willis Ware's paper Security and Privacy in
+Computer Systems [@security-privacy]. Since then, computer security has been a
+constant back-and-forth between attackers seeking to gain unauthorised access
+to systems and defenders working to patch and protect those systems. However,
+as the field has grown, the need for more and more security professionals,
+researchers and students has grown, as the field itself has increased in scope
+and complexity.
 
 To provide a safe and moderated environment to practice and develop these
-skills, Capture the Flag events were introduced, in which the goal is to obtain
-flags, i.e. "secrets hidden in purposefully-vulnerable programs or
+skills, Capture the Flag events have been introduced, in which the goal is to
+obtain flags, i.e. "secrets hidden in purposefully-vulnerable programs or
 websites." In these events, "competitors steal flags either from other
 competitors (attack/defence-style CTFs) or from the organisers (jeopardy-style
-challenges)." [@wiki-ctf] In this protected environment, hackers can explore
-new and interesting vulnerabilities, improving their skills and sharing their
-knowledge with the community, while not breaking any of the laws surrounding
-unauthorised access to computer systems.
+challenges)" [@wiki-ctf]. In these protected environments, hackers can explore
+vulnerabilities, improving their skills and sharing their knowledge with the
+community.
 
-Additionally, the academic use of jeopardy-style CTFs in learning environments
-has been extensively recognised, with inter-university competitions such as C2C
-[@c2c], Inter-Ace [@interace] and its many spiritual successors such as HECC
-[@hecc], attracting a wide array of industry sponsorship and interest including
-from government institutions. CTFs have also seen use in classroom settings,
-both at the undergraduate level with exercises and assignments gamified such as
-with the University of Birmingham's security module [@bham-vm2], and secondary
-school level with NCSC-supported programs such as CyberFirst [@cyberfirst].
+Additionally, the academic use of jeopardy-style CTFs for creating learning
+environments has been extensively recognised, with inter-university
+competitions such as C2C [@c2c], Inter-Ace [@interace] and its many spiritual
+successors, such as HECC [@hecc], all attracting a wide array of industry
+sponsorship and interest, including from government institutions. CTFs have
+also seen use in classroom settings, both at the undergraduate level with
+gamified exercises [@bham-vm2], and secondary school level with NCSC-supported
+programs such as CyberFirst [@cyberfirst].
 
-However, while CTFs have become more and more widespread, few innovations have
-changed how they are fundamentally run - while some software platforms
-for hosting scoreboard software have been developed, very little effort has
-been made to standardise the process by which challenges are developed and
-hosted. This means that for every CTF, challenges must be painstakingly
-developed one-by-one, with little ability to reuse challenges from previous
-competitions. Cheating in the form of "flag-sharing" has also become an
-increasing cause for concern, with this allowing teams to gain unfair
+However, while CTFs have become more widespread, few innovations have changed
+how they are fundamentally run -- while some software platforms for hosting
+scoreboard software have been developed, very little effort has been made to
+standardise the process by which challenges are developed and hosted. This
+means that for every CTF, challenges must be painstakingly developed
+one-by-one, with little ability to reuse challenges from previous competitions.
+Cheating in the form of "flag-sharing" has also become an increasing cause for
+concern (**citation needed**), with this allowing teams to gain unfair
 advantages, or students to plagiarise results while remaining difficult to
 detect by organisers.
 
 One approach taken by many competitions is to introduce flag randomisation, so
-that flags valid for one team/individual are not valid for others. Recent
+that flags valid for one individual are not valid for others. Recent
 innovations have led to the extension of this approach to introduce random
-variation into the structure of the challenges themselves so that each team can
-receive a unique copy, and challenges can even be reused between yearly
+variation into the structure of the challenges themselves so that everyone
+receives a unique copy, and challenges can even be reused between regular
 competitions.
 
 In this report, we present our take on challenge randomisation, specifically
 concerning binary-focused challenges. We introduce `vulnspec`, a
-Domain-Specific programming language with the ability to easily encode
-vulnerabilities and functionality for powerful memory layout and control flow
-graph randomisation and manipulation. We explain both the design and
-implementation decisions as well as the technical details of our approach and
-evaluate our success using a mini-CTF and survey to get player's opinions of
-the generated challenges.
+Domain-Specific programming language with the ability to dictate memory layout
+and control flow graph randomisation, allowing easy encodings of many
+vulnerabilities. In this report, we explain both the design and implementation
+decisions, as well as the technical details of our approach and evaluate our
+success using a mini-CTF and survey.
 
 ## Problem statement
 
