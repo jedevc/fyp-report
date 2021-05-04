@@ -36,18 +36,26 @@ titlepage-color: "e08060"
 titlepage-text-color: "ffffff"
 titlepage-rule-color: "ffffff"
 
-listings-no-page-break: true
+# listings-no-page-break: true
 
 header-includes:
 - |
     ```{=latex}
     \usepackage{tikz}
+    \usepackage{svg}
+    \usepackage{subfig}
     ```
 - |
     ```{=latex}
     \hypersetup{colorlinks=false,
                 allbordercolors={0.88 0.5 0.38},
                 pdfborder={0 0 1}}
+    ```
+- |
+    ```{=latex}
+    \makeatletter
+    \def\fps@figure{H}
+    \makeatother
     ```
 ---
 
@@ -1094,7 +1102,7 @@ capture that only *just* allows derivation of all the other values and doesn't
 require extraneous access patterns. In Figure \ref{fig:lift}, we can see that
 the outermost items can derive the innermost items using common operators.
 
-\begin{figure}
+\begin{figure}[H]
   \begin{tikzpicture}
     \draw (1cm,1cm) rectangle (3cm, 3cm) node[midway]{$*x$};
     \draw (1cm,3.5cm) rectangle (3cm, 5.5cm) node[midway]{$x[\mathtt{idx}]$};
@@ -1127,7 +1135,7 @@ capture in place of the old one. Then we can simplify this new capture, by
 removing ref and deref pairs. Eventually, we derive a new usage capture which
 represents the new usage of the variable within the signature of the function.
 
-\begin{figure}
+\begin{figure}[H]
   \begin{tikzpicture}
     \draw[thin,gray!40] (-1,-1) grid (4,4);
     \draw[<->] (-1,0)--(4,0) node[right]{$x$};
@@ -1551,15 +1559,18 @@ reliability.
 
 To judge the success of the project and the validity of the overall design
 goals, we designed a small reverse-engineering challenge using vulnspec and
-attached it to a small player survey to evaluate the challenges, what they
-thought of them, and how much they had learned from them.
+attached it to a small survey in order to evaluate the challenges, what
+participants thought of them, and how much they had learned from them.
 
 To do this, we created two parts to the challenge - the specification for each
 part was identical, except for minor variations in the flag generation
 templates. Each challenge part reveals half of the flag, which are concatenated
 together to produce the full flag. The specifications for these are listed in
 [Appendix X](#appendix-x), along with the full contents of the survey, and are
-also present in the `examples/server/` directory in the codebase.
+also present in the `examples/server/` directory in the codebase. These
+challenges were designed to be very, very simple, ideally taking less than 10
+minutes for a reasonably experienced reverse engineer, in an attempt to elicit
+more responses to the survey.
 
 To properly randomise these challenges and to collect results from the survey,
 we built a small dockerized web application to use the `vulnspec` library to
@@ -1568,17 +1579,53 @@ randomly generated user id stored as cookie. Additionally, the web app collects
 survey responses, saving them to a PostgreSQL database, which is managed and
 interfaced with using a Directus dashboard.
 
-The challenges and survey were open for a little over a week and throughout
-its duration collected X responses. While insufficient to draw strong
-conclusions, there are some clear trends in the data.
+The challenge and survey were open for around two weeks and throughout the
+duration collected 7 responses. While insufficient to draw strong conclusions,
+there are some clear trends in the data.
 
-...
+By examining the differences between the perceived times and difficulty between
+both parts of the identical challenges (see Figures \ref{fig:survey-times} and
+\ref{fig:survey-diffs}), we can see that the challenge provided a learning
+experience for a good number of the participants, who found the second
+challenge easier (or at least, no more difficult) than the first part.
+
+\begin{figure}[H]
+  \centering
+  \subfloat{\includesvg[width=0.5\textwidth]{./assets/graphs/diff_time.svg}\label{fig:survey-times}}
+  \hfill
+  \subfloat{\includesvg[width=0.5\textwidth]{./assets/graphs/diff_difficulty.svg}\label{fig:survey-diffs}}
+  \caption{Time and difficulty differences}
+\end{figure}
+
+Additionally, more than half of the participants indicated that they would have
+valued a third part to the challenges, and none indicated that they would not
+have been opposed to a third part (see Figure \ref{fig:interest-npart}), which,
+at the very least, indicates that most of the participants did not find these
+challenges boring.
+
+![Interest in a Part 3\label{fig:interest-npart}](./assets/graphs/interest-part3.svg){ width=50% }
+
+However, ultimately, the distribution between which part was most interesting
+(see Figure \ref{fig:interest-general}) and the content of textual responses
+show that there was little to no semantic difference between each part - in
+fact, solutions used to solve part 1 translated almost directly to part 2.
+
+![General challenge interest\label{fig:interest-general}](./assets/graphs/interest.svg){ width=50% }
+
+This is in part due to the fact that this reverse engineering challenge could
+be solved using binary patching or strace in less than a minute; with a
+more complex specification it would be possible to ensure that both challenges
+required different solutions, which would hopefully show more of a difference
+in required solutions.
+
+Therefore, while vulnspec may not have use in generating extreme differences in
+variation to create entirely new challenges, the approach used and the
+technology implemented certainly has use in providing mechanisms for creating
+variations to teach and reinforce underlying reverse engineering and binary
+exploitation concepts, while still preventing solve-sharing in a competitive
+environment.
 
 # Conclusion
-
-TODO
-
-## Summary
 
 TODO
 

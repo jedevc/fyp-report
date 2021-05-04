@@ -11,5 +11,5 @@ clean:
 	rm -f report.pdf
 
 %.pdf: %.md %.bib
-	pandoc -s $< -o $@ --from markdown --template vendor/eisvogel/eisvogel.tex --listings --number-sections --citeproc
+	pandoc -s $< -o $@ --from markdown --template vendor/eisvogel/eisvogel.tex --listings --number-sections --citeproc --pdf-engine-opt=--shell-escape
 
