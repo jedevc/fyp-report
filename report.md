@@ -32,9 +32,9 @@ logo-width: 250pt
 
 degree: Computer Science BSc
 
-titlepage-color: "e08060"
-titlepage-text-color: "ffffff"
-titlepage-rule-color: "ffffff"
+titlepage-color: "ffffff"
+titlepage-text-color: "000000"
+titlepage-rule-color: "e08060"
 
 header-includes:
 - |
