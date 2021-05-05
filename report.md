@@ -182,7 +182,7 @@ design decisions and implementation differ substantially.
 To solve the problems detailed above, we present `vulnspec`, a new
 domain-specific programming language that encodes specifications of vulnerable
 programs. Vulnspec can be interfaced with using a flexible command-line
-interface or using a Python API. When run, it can produce C code, binaries and
+interface (see [Appendix 2](#appendix-2)) or using a Python API. When run, it can produce C code, binaries and
 runnable environments, ready for players to solve.
 
 To do this, we take a top-down approach, inspired by the configuration of
@@ -1260,7 +1260,7 @@ These configuration options are allocated into 4 groups:
 - Additional files
 
 These options are used across two phases, compilation and environment
-generation, see [Appendix X](#appendix-x) for more information.
+generation, see [Appendix 3](#appendix-3) for more information.
 
 During compilation, we use the configuration options to determine:
 
@@ -1400,7 +1400,7 @@ To do this, we created two parts to the challenge: the specification for each
 part was identical, except for minor variations in the flag generation
 templates. Each challenge part reveals half of the flag, which can be
 concatenated together to produce the full flag. The specifications for these
-parts are listed in [Appendix X](#appendix-x), along with the full contents of
+parts are listed in [Appendix 4](#appendix-4), along with the full contents of
 the survey. These challenges were designed to be very, very simple, ideally
 taking less than 10 minutes for a reasonably experienced reverse engineer, in
 an attempt to elicit more responses to the survey.
@@ -1563,7 +1563,7 @@ synthesis.
 
 # Appendices
 
-## Appendix 1 - Grammar
+## Appendix 1 (Grammar) {#appendix-1}
 
 A simplified EBNF grammar for vulnspec is defined below. This grammar is kept
 simple, at the cost of being slightly inaccurate: specifically, it ignores
@@ -1656,7 +1656,7 @@ string = '"', { all_chars - '"' }, '"'
 boolean = "true" | "false"
 ```
 
-## Appendix X (Command line help pages)
+## Appendix 2 (Command line help pages) {#appendix-2}
 
 The main tool help:
 
@@ -1727,8 +1727,44 @@ optional arguments:
                         coding style to output
 ```
 
-## Appendix X (Environment configuration options)
-## Appendix X (Survey)
+## Appendix 3 (Environment configuration options) {#appendix-3}
+
+In this appendix, we lay out the different environment configuration options
+available to specifications.
+
+Compiler settings (under `compile`):
+
+| Name | Default | Description |
+| :--- | :------ | :---------- |
+| `cc` | gcc | Compiler to use |
+| `arch` | default | CPU architecture to build binary for |
+| `warnings` | no | Whether to enable standard compiler warnings |
+| `strip` | no | Whether to strip symbols from the binary |
+| `debug` | no | Whether to enable debug information |
+| `debug_separate` | no | Whether to extract debug information to a separate file |
+
+Security settings (under `security`):
+
+| Name | Default | Description |
+| :--- | :------ | :---------- |
+| `nx` | no | Enable stack as not-executable to prevent shellcode |
+| `canary` | no | Enable stack cookies to mitigate buffer overflows |
+| `pie` | no | Enable position independent code to enhance ASLR |
+| `relro` | no | Enable RELRO protections |
+
+Environment settings (under `env`):
+
+| Name | Default | Description |
+| :--- | :------ | :---------- |
+| `type` | raw-raw-raw | Preset environment to use |
+| `port` | 4000 | Port number for the challenge to listen on (if applicable) |
+| `script` | | Script to run during environment creation |
+
+Additionally, under `files`, any number of files may be provided that are
+required to properly build the challenge or generate the environment, such as
+additional source files, configs, etc.
+
+## Appendix 4 (Survey) {#appendix-4}
 
 This appendix is broken into three sections, the specification of the
 reverse-engineering challenge itself, the index page with details of the
