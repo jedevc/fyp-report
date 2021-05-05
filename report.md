@@ -683,9 +683,8 @@ block can be called. We call each set of these decisions an "interpretation",
 the results of which are propagated by an "interpreter" into the graph.
 
 The output of this process is a modified graph, represented by a "program"
-object (rather than an asset) that contains a collection of functions (with
-their own arguments, local variables and statements), global variables, and
-optional external variables (only if the specification requires them).
+object (rather than an asset) that contains a collection of global variables
+and functions (with their own parameters, local variables and statements).
 
 As the process of interpretation moves from start to finish we translate from
 the vulnspec-style block-chunk graph, into a graph that more closely represents
@@ -1006,8 +1005,8 @@ signatures from rooting and lifting to construct a list of arguments and their
 types. We can also determine which local variables need to be assigned to each
 function so that they appear in the right stack frame.
 
-With all functions correctly defined, we collect them, along with all global and
-external variables, into a program object that represents the end output of
+With all functions correctly defined, we collect them, along with all global
+variables, into a program object that represents the end output of
 interpretation. This can then be traversed later during code generation to
 produce fully valid C code.
 
@@ -1065,11 +1064,11 @@ block (nop) log {
 ```
 
 Introducing NOPs, as detailed above, is a slight oversimplification, notably
-when the NOP makes references to other blocks, chunks or externs. To handle
+when the NOP makes references to other blocks and chunks. To handle
 these cases, when initialising the collection of NOPs, we traverse each NOP,
 exploring its connection to other blocks, as well as its variable references.
 Then, when we introduce a NOP into the block-chunk graph, we also have to
-include all the blocks, chunks and externs that it references.
+include all the blocks and chunks that it references.
 
 ### Templates
 
