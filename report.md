@@ -87,7 +87,7 @@ gamified exercises [@bham-vm2], and secondary school level with NCSC-supported
 programs such as CyberFirst [@cyberfirst].
 
 However, while CTFs have become more widespread, few innovations have changed
-how they are fundamentally run -- while some software platforms for hosting
+how they are fundamentally run; while some software platforms for hosting
 scoreboard software have been developed, very little effort has been made to
 standardise the process by which challenges are developed and hosted. This
 means that for every CTF, challenges must be painstakingly developed
@@ -128,7 +128,7 @@ solve-scripts with each other, allowing them to gain different flags, but using
 an identical technique. We want to provide a way to mitigate against this more
 advanced form of cheating.
 
-Additionally, the binary only represents a single challenge - an interesting
+Additionally, the binary only represents a single challenge: an interesting
 puzzle that can only be solved once and not over and over again. We want to
 introduce random variation into the challenge as part of its design and build
 process, so that we can output multiple challenge binaries, with different
@@ -257,7 +257,7 @@ For a more detailed specification of the grammar, see [Appendix 1](#appendix-1).
 Blocks and chunks are the highest level constructs in the specification that
 represent pieces of code and data respectively.
 
-A block is essentially a procedure -- it can't take any arguments or return
+A block is essentially a procedure: it can't take any arguments or return
 values, it just represents code that is executed.
 
 ```
@@ -458,7 +458,7 @@ The parser is almost an $LL(k)$ grammar, which allowed the parser to be
 entirely predictive. Unfortunately, because of the complexity of the language,
 some of the structures in the language cannot be parsed predictively and so
 some backtracking is required. For example, when parsing a statement, there are
-two possible non-terminals -- an lvalue (on the left of an assignment), or an
+two possible non-terminals: an lvalue (on the left of an assignment), or an
 expression (part of an expression statement). There's no way with $k$ items of
 look-ahead to work out which one is which, so we can try one, then the other,
 using backtracking.
@@ -491,7 +491,7 @@ implicit type conversion and promotion rules. To avoid this, we construct a
 minimal model of how C performs type checking to handle all but the most
 complex cases.
 
-Our type model defines two kinds of types - concrete types, such as an integer
+Our type model defines two kinds of types: concrete types, such as an integer
 `int` or a string `*char`, and abstract types, such as `Integral` or `Pointer`,
 which we call "meta"-types. Between these two kinds, we establish a simple
 function that maps concrete types into their respective abstract types,
@@ -606,10 +606,10 @@ to be scanned.
 
 Next, we recursively traverse all the specified `include` directories,
 collecting all `.h` header files. As we iterate through them, we open each one,
-scanning for `#include` directives using a simple regular expression - the
-scanner then searches for this path in the `include_paths` directories,
-adding it as a child of the top-level header if found. Then we repeat this
-process, scanning this new file's includes, looking for those, etc.
+scanning for `#include` directives using a simple regular expression --- the
+scanner then searches for this path in the `include_paths` directories, adding
+it as a child of the top-level header if found. Then we repeat this process,
+scanning this new file's includes, looking for those, etc.
 
 This scanning process may seem needlessly complex, however, it catches the edge
 cases where definitions for a header are not directly declared in that header.
@@ -623,7 +623,7 @@ file, we get back a list of tag objects which represent variables, types and
 function declarations from that file, along with their type signatures.
 
 From these tags, we translate each C-style name into a vulnspec-style name, by
-appending `"@<lib>.<header-name>"` - e.g. `printf` becomes `printf@libc.stdio`.
+appending `"@<lib>.<header-name>"`, e.g. `printf` becomes `printf@libc.stdio`.
 We also translate each C-style type signature into a vulnspec-style type that
 can be parsed using the vulnspec parser. These tag definitions are then written
 to JSON files, ready for utilisation by the main `vulnspec` tool.
@@ -1026,8 +1026,8 @@ a single stage, but are spread across the entire pipeline.
 
 Some of these techniques introduce surface level changes, such as the random
 name generation, others introduce semantic difference in the program (and the
-required exploit) such as templating, and others introduce both. Both of these
-techniques are important together - generated programs must not only behave
+required exploit) such as templating, and others introduce both. These
+techniques are important together: generated programs must not only behave
 slightly differently and require different exploits for them, but they must
 also look significantly different.
 
@@ -1096,9 +1096,8 @@ variables, functions and modules in order to allow creating complex
 expressions. In the global scope, we allow access to useful libraries
 (`random`, `string`, etc), as well as the translations from vulnspec to C
 names. Meanwhile, in the local scope, we allow referencing any already
-instantiated templates - this allows creating templates that depend
-on the value of another template, a vital feature in constructing vulnerable
-programs.
+instantiated templates: this allows creating templates that depend on the value
+of another template, a vital feature in constructing vulnerable programs.
 
 For example:
 
@@ -1134,7 +1133,7 @@ block y {
 ### Random name generation
 
 A vital component of ensuring surface-level differences between synthesis
-results lies in generating new names for variables and functions - different
+results lies in generating new names for variables and functions: different
 names will make the same program look different, even though they may be
 otherwise identical. However, completely random names would appear nonsensical,
 so to provide some structure, we use a Markov chain model based on existing
@@ -1160,8 +1159,8 @@ isn't generated twice, and that a name doesn't clash with one already defined
 in an external library.
 
 To generate names with this algorithm, we produce two separate models, one to
-create variable names (of length in the range 1 - 12) and another to create
-function names (of length in the range 3 - 12). The variable model is trained
+create variable names (of length in the range 1-12) and another to create
+function names (of length in the range 3-12). The variable model is trained
 on the global and local variable names in `libmusl`, while the function model
 is trained on the function definition and prototype names.
 
@@ -1225,7 +1224,7 @@ functions is unpredictable for each synthesis run, and functions may refer to
 each other in co-recursive structures which require prototypes.
 
 Additionally, as we inspect each variable access as we output it, we inspect if
-it uses an external library - if it does, we generate the correct `#include`
+it uses an external library: if it does, we generate the correct `#include`
 directive, adding it to a set. Then these includes are prefixed to the C code,
 along with the other includes that may have been manually specified.
 
@@ -1245,7 +1244,7 @@ finishing touch, the C code is optionally run through `clang-format`
 At the end of the pipeline, vulnspec produces C code that contains the desired
 vulnerabilities. However, vulnerable C code by itself doesn't guarantee
 exploitation and provide no details as to the difficulty of producing a working
-exploit - these factors come down to compiler options, kernel settings and
+exploit: these factors come down to compiler options, kernel settings and
 the environment setup.
 
 Therefore, to bridge this gap, we provide some additional utilities for
@@ -1381,8 +1380,8 @@ These template values include:
   data) that can be used to calculate exact offsets between variables
 
 These challenge scripts can be run against the produced binaries to check that
-they correctly output a flag - this is the same technique we used to confirm
-the validity of out example specifications.
+they correctly output a flag, the same technique we used to confirm the
+validity of out example specifications.
 
 These solution scripts have a number of uses: they could use to validate
 synthesised challenges as explained above, they could be given as
@@ -1397,7 +1396,7 @@ goals, we designed a small reverse-engineering challenge using vulnspec and
 attached it to a survey in order to evaluate the challenge, learning what
 participants thought of it, and how much they had learned.
 
-To do this, we created two parts to the challenge - the specification for each
+To do this, we created two parts to the challenge: the specification for each
 part was identical, except for minor variations in the flag generation
 templates. Each challenge part reveals half of the flag, which can be
 concatenated together to produce the full flag. The specifications for these
@@ -1489,7 +1488,7 @@ Unfortunately, not every planned feature could be developed in time. In the
 future, there are plenty of opportunities for expanding and improving the
 techniques of challenge generation found in this report.
 
-One major area that could use more work would be in random theming - currently,
+One major area that could use more work would be in random theming. Currently,
 the challenge designer still needs to write context code instead of just the
 vulnerability description. Ideally, more powerful random generation could
 synthesise code into a handful of "scenarios", selecting NOPs, interfacing with
@@ -1567,7 +1566,7 @@ synthesis.
 ## Appendix 1 - Grammar
 
 A simplified EBNF grammar for vulnspec is defined below. This grammar is kept
-simple, at the cost of being slightly inaccurate -- specifically, it ignores
+simple, at the cost of being slightly inaccurate: specifically, it ignores
 all white-space, as well as a number of minor hacks used to clarify and
 optimise the parser's implementation.
 
