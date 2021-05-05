@@ -36,8 +36,6 @@ titlepage-color: "e08060"
 titlepage-text-color: "ffffff"
 titlepage-rule-color: "ffffff"
 
-# listings-no-page-break: true
-
 header-includes:
 - |
     ```{=latex}
@@ -1074,11 +1072,11 @@ include all the blocks, chunks and externs that it references.
 
 ### Templates
 
-Templates are a powerful technique to modify parts of the program at
-synthesization time, specifically over the spatial domain. Essentially, they
-are abstract values that are not fixed, but take on a single concrete value for
-a single synthesis. This instantiation of abstract to concrete values is
-performed after parsing, but before translation into the block-chunk graph.
+Templates are a powerful technique to modify parts of the program during
+synthesis, specifically over the spatial domain. Essentially, they are unfixed abstract
+values that take on a single concrete value for a single
+synthesis. This instantiation of abstract to concrete values is performed after
+parsing, but before translation into the block-chunk graph.
 
 Each template has 2 components: a name and an optional definition (note that
 for the first usage of a template, the definition is not optional). In
