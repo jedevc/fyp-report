@@ -4,51 +4,52 @@ words = 0
 characters = 0
 characters_and_spaces = 0
 process_anyway = false
-stop = false
 
 wordcount = {
   Str = function(el)
-    -- stop counting after the references section
-    if el.text == "References" then
-      stop = true
+    -- we don't count a word if it's entirely punctuation:
+    if el.text:match("%P") then
+      words = words + 1
     end
 
-    if not stop then
-      -- we don't count a word if it's entirely punctuation:
-      if el.text:match("%P") then
-          words = words + 1
-      end
-
-      characters = characters + utf8.len(el.text)
-      characters_and_spaces = characters_and_spaces + utf8.len(el.text)
-    end
+    characters = characters + utf8.len(el.text)
+    characters_and_spaces = characters_and_spaces + utf8.len(el.text)
   end,
 
   Space = function(el)
-    if not stop then
-      characters_and_spaces = characters_and_spaces + 1
-    end
+    characters_and_spaces = characters_and_spaces + 1
   end,
 
   Code = function(el)
-    if not stop then
-      _,n = el.text:gsub("%S+","")
-      words = words + n
-      text_nospace = el.text:gsub("%s", "")
-      characters = characters + utf8.len(text_nospace)
-      characters_and_spaces = characters_and_spaces + utf8.len(el.text)
-    end
+    _,n = el.text:gsub("%S+","")
+    words = words + n
+    text_nospace = el.text:gsub("%s", "")
+    characters = characters + utf8.len(text_nospace)
+    characters_and_spaces = characters_and_spaces + utf8.len(el.text)
   end,
 
   CodeBlock = function(el)
-    -- if not stop then
-    --   _,n = el.text:gsub("%S+","")
-    --   words = words + n
-    --   text_nospace = el.text:gsub("%s", "")
-    --   characters = characters + utf8.len(text_nospace)
-    --   characters_and_spaces = characters_and_spaces + utf8.len(el.text)
-    -- end
-  end
+    -- _,n = el.text:gsub("%S+","")
+    -- words = words + n
+    -- text_nospace = el.text:gsub("%s", "")
+    -- characters = characters + utf8.len(text_nospace)
+    -- characters_and_spaces = characters_and_spaces + utf8.len(el.text)
+  end,
+
+  Table = function(el)
+    old_words = words
+    old_characters = characters
+    old_characters_and_spaces = characters_and_spaces
+    words = 0
+    characters = 0
+    characters_and_spaces = 0
+
+    pandoc.walk_block(el, wordcount)
+
+    words = old_words - words
+    characters = old_characters - characters
+    characters_and_spaces = old_characters_and_spaces - characters_and_spaces
+  end,
 }
 
 -- check if the `wordcount` variable is set to `process-anyway`
@@ -60,9 +61,19 @@ function Meta(meta)
 end
 
 function Pandoc(el)
-    -- skip metadata, just count body:
-    pandoc.walk_block(pandoc.Div(el.blocks), wordcount)
+    -- stop counting words after the stopper
+    nblocks = {}
+    for k,v in pairs(el.blocks) do
+      if v.tag == "Div" and v.identifier == "stopper" then
+        break
+      end
+      nblocks[k] = v
+    end
 
+    -- walk tree
+    pandoc.walk_block(pandoc.Div(nblocks), wordcount)
+
+    -- output
     print(words .. " words in body")
     print(characters .. " characters in body")
     print(characters_and_spaces .. " characters in body (including spaces)")

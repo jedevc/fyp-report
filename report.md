@@ -75,7 +75,7 @@ skills, Capture the Flag events have been introduced, in which the goal is to
 obtain flags, i.e. "secrets hidden in purposefully-vulnerable programs or
 websites." In these events, "competitors steal flags either from other
 competitors (attack/defence-style CTFs) or from the organisers (jeopardy-style
-challenges)" [@wiki-ctf]. In these protected environments, hackers can explore
+challenges)" (Wikipedia [@wiki-ctf]). In these protected environments, hackers can explore
 vulnerabilities, improving their skills and sharing their knowledge with the
 community.
 
@@ -252,6 +252,8 @@ vulnspec. As it is designed as a minimal language that can express
 vulnerabilities, its syntax mirrors C in many places, therefore, we focus on
 the main differences, not the similarities.
 
+For a more detailed specification of the grammar, see [Appendix 1](#appendix-1).
+
 ### Blocks and Chunks
 
 Blocks and chunks are the highest level constructs in the specification that
@@ -390,98 +392,6 @@ The above uses the `M_PI` value defined in the `math.h` header. Note that, in
 this case, we explicitly include the header, which normally would not be
 required. For more information, see **[External Library Integration](#external-library-integration)**.
 
-### Grammar
-
-A simplified EBNF grammar for vulnspec is defined below. This grammar is kept
-simple, at the cost of being slightly inaccurate -- specifically, it ignores
-all white-space, as well as a number of minor hacks used to clarify and
-optimise the parser's implementation.
-
-```
-(* a specification is a series of high-level pieces *)
-spec = { piece }
-piece = chunk_piece | block_piece | template_piece | include_piece
-
-(* a chunk defines variables *)
-chunk_piece = ("extern" | "chunk"), declaration, { ",", declaration }
-declaration = name, ":", type, [ "=", expression ]
-type =
-     | "*", type
-     | "[", (integer | template), "]", type
-     | "fn", "(", args, ")", type
-     | name
-
-(* a template pre-defines templates without inserting values *)
-template_piece = "template", template
-template = "<", name, [ ";", ? python expression ? ], ">"
-
-(* an explicit include requires that a certain header is included *)
-include_piece = "include", string
-
-(* a block contains statements *)
-block_piece = "block", constraints, scope
-scope = "{", statements, "}"
-statements = { statement }
-
-statement = "..."
-          | while_statement
-          | if_statement
-          | call_statement
-          | assignment
-          | literal
-          | expression
-while_statement = "while", "(", expression, "), scope
-call_statement = "call", name
-if_statement = "if", "(", expression, ")", scope, [ "else", scope | if_statement ]
-assignment = lvalue, "=", expression
-
-(* operations upon expressions *)
-expression = disjunction
-disjunction = conjunction | ( conjunction, "||", disjunction )
-conjunction = comparison | ( comparison, "&&", conjunction )
-comparison = sum | ( sum, ( "!=" | "==" | "<" | "<=" | ">" | ">=" ), sum )
-sum = product | ( product, ( "+" | "-" | "&" | "|" | "^" ), sum )
-product = standalone | ( standalone, ( "*" | "/" ), product )
-standalone = [ "-" | "!" | "~" ], atom
-
-(* most basic atomic expression *)
-atom = atom', [ "(", args, ")" ], [ "as", type ]
-atom' = "(", lvalue, ")"
-      | "(", expression, ")"
-      | "&", lvalue
-      | "sizeof", "(", type, ")"
-      | "sizeofexpr", "(", expression, ")"
-      | value
-      | lvalue
-
-(* expression that can appear on the left-hand-side of an assignment *)
-lvalue = lvalue', [ "[", expression, "]" ]
-lvalue' = "(", lvalue, ")"
-        | "*", atom
-        | "null" | "NULL"
-        | name
-        | literal
-
-(* core non-terminals *)
-name = alpha_char, { alpha_char | decimal_digit }, ( "@", { alpha_char | decimal_digit | "."} )
-literal = "$", "(", { all_chars - ")" }, ")"
-
-args = [ expression, { ",", expression } ]
-
-(* values *)
-value = integer | float | char | string | boolean | template
-integer = ("0x", hex_digit, { hex_digit })
-        | ("0o", oct_digit, { oct_digit })
-        | ("0b", binary_digit, { binary_digit })
-        | (decimal_digit, { decimal_digit })
-float = decimal_digit, { decimal_digit }, ".", { decimal_digit }
-char = "#", all_printable_chars ?
-     | "#", '"', all_chars, '"'
-     | "#", "'", all_chars, "'"
-string = '"', { all_chars - '"' }, '"'
-       | "'", { all_chars - "'" }, "'"
-boolean = "true" | "false"
-```
 
 # Implementation
 
@@ -649,23 +559,21 @@ are encoding manually:
 ## External library integration
 
 The majority of binary CTF challenges require interaction with the C standard
-library (libc), either for the utility functions, such as file input and
-output, or to expose vulnerable functions such as `system` or `gets`. To better
-facilitate such integration of libc, we provide a utility to generate listings
-of all functions, variables and types in specified libraries, which can then be
-referenced using special syntax from vulnspec. This utility is bundled as the
+library (libc), either for utility functions, such as file input and output, or
+to expose vulnerable functions such as `system` or `gets`. To better facilitate
+such integration, we provide a utility to generate listings of all functions,
+variables and types in specified libraries, which can then be referenced using
+special syntax from vulnspec. This utility is bundled as the
 `builtin_generator` tool which is also used to generate the primitive types and
 the meta-type graph from the previous section.
 
 In addition to the fields [already detailed](#type-checking) in the type config
 file, we introduce a `libraries` key that specifies information relevant to
-parsing and loading data from as many libraries as we want - however, for
-mostly practical reasons, we only include libc, however, this approach could be
-extended to any third-party libraries.
+parsing and loading data from external libraries; for now, only libc is
+included, but the approach is trivially extendable to other libraries.
 
 ```yaml
 ...
-
 libraries:
   libc:
     root: "../musl-1.2.1"
@@ -675,24 +583,22 @@ libraries:
       - ./obj/include/
       - ./arch/generic/
       - ./arch/x86_64/
-
 ...
 ```
 
-Each field's purpose is shown below:
+Each subfield's purpose is shown below:
 
-| field | purpose |
-| :- | :- |
-| `root` | location of library relative to the current directory |
-| `include` | list of locations to search for header files |
-| `include_paths` | list of locations to recursively search for included files |
+| Field           | Purpose |
+| :-------------- | :------ |
+| `root`          | Library path relative to the current directory |
+| `include`       | Locations to search for header files |
+| `include_paths` | Locations to recursively search for included files |
 
-Note that we use the more lightweight libmusl, as opposed to the more common
-and frequently used glibc. We expected that libmusl would prove simpler to
-programmatically analyse, with fewer internal complex dependencies, and
-empirical tests confirmed this. Since the process mostly only extracts the
-public functions of the library, all results from libmusl are transferrable to
-when we use glibc (which is what we use for testing).
+For out libc implementation, we choose libmusl, instead of the more frequently
+used glibc. Because it is more lightweight, we expected that libmusl would
+prove simpler to programmatically analyse, and empirical tests confirmed this.
+Since the tool extracts all the data of the library, all results from libmusl
+are transferrable to when we use glibc.
 
 The builtin generation process is fairly straightforward from the provided
 data. Initially, we scan for common build autotools and Makefile build scripts,
@@ -1670,12 +1576,108 @@ general approach has been successful, and that as a result, we have contributed
 to the total knowledge surrounding the area of automatic challenge design and
 synthesis.
 
+::: {#stopper}
+:::
+
 # References
 
 ::: {#refs}
 :::
 
 # Appendices
+
+## Appendix 1 - Grammar
+
+A simplified EBNF grammar for vulnspec is defined below. This grammar is kept
+simple, at the cost of being slightly inaccurate -- specifically, it ignores
+all white-space, as well as a number of minor hacks used to clarify and
+optimise the parser's implementation.
+
+```
+(* a specification is a series of high-level pieces *)
+spec = { piece }
+piece = chunk_piece | block_piece | template_piece | include_piece
+
+(* a chunk defines variables *)
+chunk_piece = ("extern" | "chunk"), declaration, { ",", declaration }
+declaration = name, ":", type, [ "=", expression ]
+type =
+     | "*", type
+     | "[", (integer | template), "]", type
+     | "fn", "(", args, ")", type
+     | name
+
+(* a template pre-defines templates without inserting values *)
+template_piece = "template", template
+template = "<", name, [ ";", ? python expression ? ], ">"
+
+(* an explicit include requires that a certain header is included *)
+include_piece = "include", string
+
+(* a block contains statements *)
+block_piece = "block", constraints, scope
+scope = "{", statements, "}"
+statements = { statement }
+
+statement = "..."
+          | while_statement
+          | if_statement
+          | call_statement
+          | assignment
+          | literal
+          | expression
+while_statement = "while", "(", expression, "), scope
+call_statement = "call", name
+if_statement = "if", "(", expression, ")", scope, [ "else", scope | if_statement ]
+assignment = lvalue, "=", expression
+
+(* operations upon expressions *)
+expression = disjunction
+disjunction = conjunction | ( conjunction, "||", disjunction )
+conjunction = comparison | ( comparison, "&&", conjunction )
+comparison = sum | ( sum, ( "!=" | "==" | "<" | "<=" | ">" | ">=" ), sum )
+sum = product | ( product, ( "+" | "-" | "&" | "|" | "^" ), sum )
+product = standalone | ( standalone, ( "*" | "/" ), product )
+standalone = [ "-" | "!" | "~" ], atom
+
+(* most basic atomic expression *)
+atom = atom', [ "(", args, ")" ], [ "as", type ]
+atom' = "(", lvalue, ")"
+      | "(", expression, ")"
+      | "&", lvalue
+      | "sizeof", "(", type, ")"
+      | "sizeofexpr", "(", expression, ")"
+      | value
+      | lvalue
+
+(* expression that can appear on the left-hand-side of an assignment *)
+lvalue = lvalue', [ "[", expression, "]" ]
+lvalue' = "(", lvalue, ")"
+        | "*", atom
+        | "null" | "NULL"
+        | name
+        | literal
+
+(* core non-terminals *)
+name = alpha_char, { alpha_char | decimal_digit }, ( "@", { alpha_char | decimal_digit | "."} )
+literal = "$", "(", { all_chars - ")" }, ")"
+
+args = [ expression, { ",", expression } ]
+
+(* values *)
+value = integer | float | char | string | boolean | template
+integer = ("0x", hex_digit, { hex_digit })
+        | ("0o", oct_digit, { oct_digit })
+        | ("0b", binary_digit, { binary_digit })
+        | (decimal_digit, { decimal_digit })
+float = decimal_digit, { decimal_digit }, ".", { decimal_digit }
+char = "#", all_printable_chars ?
+     | "#", '"', all_chars, '"'
+     | "#", "'", all_chars, "'"
+string = '"', { all_chars - '"' }, '"'
+       | "'", { all_chars - "'" }, "'"
+boolean = "true" | "false"
+```
 
 ## Appendix X (Command line help pages)
 
