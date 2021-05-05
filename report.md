@@ -1212,25 +1212,25 @@ With all blocks and chunks interpreted, the graph rewritten with C-style
 constructs, and randomisation complete, we can now output code.
 
 The general process for this involves iterating over all functions and global
-variables, creating a string for each variable declaration and all statements
-and expressions, and recombining them into C code. However, the code is not
+variables, creating a string for each variable declaration, statement and
+expression, recombining them all into C code. However, the code is not
 immediately output and is instead appended to the results of the rest of the
 code generation.
 
 For the rest, we create function prototypes for every function except `main`
 (since no other function should call to it). This is because the order of
 functions is unpredictable for each synthesis run, and functions may refer to
-each other in co-recursive structures which require prototypes.
+each other in co-recursive structures, thereby requiring prototypes.
 
-Additionally, as we inspect each variable access as we output it, we inspect if
-it uses an external library: if it does, we generate the correct `#include`
-directive, adding it to a set. Then these includes are prefixed to the C code,
-along with the other includes that may have been manually specified.
+Additionally, as we inspect each variable access, we determine if it uses an
+external library: if it does, we generate the correct `#include` directive,
+adding it to a set. Later, these includes are prefixed to the C code, along with
+the other includes that may have been manually specified.
 
 Finally, we patch the function signature of `main` to allow use of `argc` and
 `argv`. We also add calls to `setbuf(stdout, NULL)` and `setbuf(stderr, NULL)`
 to disable buffering on both standard output streams, which can cause problems
-when deployed into environments.
+when deployed into networked environments.
 
 Finally, with all the rest of the code produced, we prepend the optional file
 header containing information on how the code was generated and instructions on
