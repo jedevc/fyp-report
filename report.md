@@ -3,7 +3,7 @@ title: "Vulnerability Specification and Automatic Challenge Design"
 author: ["Justin Chadwell"]
 subauthor: 1872745
 supervisor: "David Oswald"
-wordcount: 9999
+wordcount: XXXX
 
 abstract: |
   Capture the Flag competitions are rapidly increasing in popularity as a
