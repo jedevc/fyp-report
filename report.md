@@ -66,9 +66,9 @@ brought to interest in 1967 with Willis Ware's paper Security and Privacy in
 Computer Systems [@security-privacy]. Since then, computer security has been a
 constant back-and-forth between attackers seeking to gain unauthorised access
 to systems and defenders working to patch and protect those systems. However,
-as the field has grown, the need for more and more security professionals,
-researchers and students has grown, as the field itself has increased in scope
-and complexity.
+as the field has grown, the need for more security professionals, researchers
+and students has grown, as the field itself has increased in scope and
+complexity.
 
 To provide a safe and moderated environment to practice and develop these
 skills, Capture the Flag events have been introduced, in which the goal is to
@@ -117,19 +117,18 @@ success using a mini-CTF and survey.
 ## Problem statement
 
 As previously stated, the current process for building Capture the Flag
-competitions is highly manual, requiring careful and complex work to produce
-interesting, different and challenging puzzles. Despite the effort, however,
-the output of this design is often a single challenge binary, with only a
-single solution.
+competitions is highly manual, requiring lots of work to produce interesting
+and varied challenges. Despite the effort, however, the output of this design
+is often a single challenge binary, with only a single solution.
 
 This binary suffers from a lack of exploit variety, leading to an increased
-opportunity for CTF players to illegally share solutions. Some effort has been
-made to prevent this form of cheating, specifically by preventing flag-sharing
-through flag randomization, and has shown successful results. However, some
-cheating may still go unnoticed, due to the more complex "solve-sharing", in
-which players share detailed write-ups or solve scripts with each other,
-allowing them to gain different flags, but using the same technique. We want to
-provide a way to mitigate against this more advanced form of cheating.
+opportunity for CTF players to share solutions. Some effort has been made to
+prevent this form of cheating, specifically by preventing flag-sharing through
+flag randomization. However, some cheating may still go unnoticed, due to more
+complex "solve-sharing", in which players share detailed write-ups or
+solve-scripts with each other, allowing them to gain different flags, but using
+an identical technique. We want to provide a way to mitigate against this more
+advanced form of cheating.
 
 Additionally, the binary only represents a single challenge - an interesting
 puzzle that can only be solved once and not over and over again. We want to
@@ -138,11 +137,11 @@ process, so that we can output multiple challenge binaries, with different
 solutions. This allows players to practice a single technique multiple times,
 to enhance understanding of the underlying concepts.
 
-Finally, we want to create an environment for a challenge designer to easily
-and efficiently create new binary challenges, at a higher level than manually
-writing C code. Ideally, such an environment would allow for easy construction
-of vulnerable primitives, such as specifying memory layouts and general control
-flow, while providing a level of abstraction over writing plain C code.
+Finally, we want to create an environment for a designer to easily and
+efficiently create new challenges, at a higher level than manually writing C
+code. Such an environment should allow for easy construction of vulnerable
+primitives, such as specifying memory layouts and general control flow, while
+providing a level of abstraction over writing plain C code.
 
 ## Related work
 
@@ -151,120 +150,115 @@ under-explored, mostly due to only recent interest in it, has several
 interesting pieces of work in the field, many of which we draw inspiration
 from.
 
-The beginning of interest in automatic challenge generation seems to have begun
-with the 2014 edition of PicoCTF [@apg], where challenges were randomly
-templated to produce different challenges for different teams, reducing the
-ability of those teams to share flags and solutions. This was effective
-throughout the competition and allowed greater insight into who was cheating,
-how they were doing it, and the source of the leak.
+The beginning of automatic challenge generation seems to lie with the 2014
+edition of PicoCTF [@apg], where challenges were randomly templated to produce
+different variations for different teams, reducing the ability of those teams
+to share flags and solutions. This was effective throughout the competition and
+allowed greater insight into who was cheating and how.
 
 AutoCTF [@autoctf], a week-long event using challenges built using the LAVA bug
-injection system [@autoctf-lava] is one of the main and most popular instances
-of automatic challenge generation. Their findings included that such a tool
-could be (and was) used to massively reduce competition overhead and cost of
-development and generate a wide variety of new challenges. However, because
-the system was built as bug-injection, automatically ensuring that the results
-were exploitable, or determining exactly the type of exploit that would be
-required is more complex to pin down.
+injection system [@autoctf-lava], is one of the most well-known tools for
+automatic challenge generation. Their findings included that such a tool could
+be (and was) used to massively reduce competition overhead and cost of
+development by generating a wide variety of new challenges. However, because
+the system was built upon bug-injection, ensuring that the results were
+exploitable, or determining exactly the type of exploit that would be required
+was quite difficult to do.
 
-Contrasting with this bug-injection approach, we have specification-based
-challenge generation, such as SecGen [@secgen], which generate fully-fledged
-exploitable virtual machines and create escalation pathways inside. Instead of
-varying correct code and configs, templates are used to vary the content of
-each VM, to ensure that each student/player receives a different setup.
-Additionally, these challenges are themed, providing a consistent "feeling" to
-each VM, emphasising the importance of visual similarity.
+Contrasting with this bug-injection approach, there are specification-based
+tools, such as SecGen [@secgen], which generate fully-fledged exploitable
+virtual machines and create escalation pathways inside. Instead of varying
+correct code and configs, templates are used to vary the setup of each VM, to
+ensure that each player receives a different setup. Additionally, these
+challenges are themed, providing a consistent "look-and-feel" to each VM,
+emphasising the importance of non-surface level similarity.
 
 Finally, Blinker [@blinker] creates randomised binary challenges using ERB ruby
 templating of source files and LLVM integration to provide variation at the
-binary level and uses these tools in a CTF competition to evaluate its
-success. In particular, this technique has inspired our work, however, the
-exact direction is quite different.
+binary level and uses these tools in a CTF competition to evaluate its success.
+In particular, this technique has greatly inspired our work, however, the
+design decisions and implementation differ substantially.
 
 # Design
 
-To solve the problems detailed above, inspired by existing work, we present
-`vulnspec`, a new domain-specific programming language that encodes
-specifications of vulnerable programs. Vulnspec can be interfaced with using a
-flexible command-line interface, or using a Python API, producing C code,
-binaries and environments ready for players to solve.
+To solve the problems detailed above, we present `vulnspec`, a new
+domain-specific programming language that encodes specifications of vulnerable
+programs. Vulnspec can be interfaced with using a flexible command-line
+interface or using a Python API. When run, it can produce C code, binaries and
+runnable environments, ready for players to solve.
 
-We take a top-down approach, inspired by the configuration of SecGen and
-Blinker. Instead of taking working programs and modifying them to contain
-vulnerabilities (like AutoCTF), we take a vulnerability description and produce
-a program that contains that vulnerability, introducing variation and context
-around it. Specifically, we extend the idea of simple templating to produce our
-own language that transpiles to C and focus on creating variation within the
-control flow graph and variable layouts, which make up the most complexity in
-designing exploitable challenges.
+To do this, we take a top-down approach, inspired by the configuration of
+SecGen and Blinker. We take a vulnerability description and produce a program
+that contains that vulnerability, introducing variation around it.
+Specifically, we extend the idea of simple templating to produce our own
+language that compiles to C and create variation within the control flow graph
+and memory layout, which often makes up the most complexity in designing
+challenges.
 
 ## Goals
 
-The `vulnspec` language and tooling has been built to satisfy several
-design goals, that have been critical in choosing what functionality to
-prioritise building and implementing. In these goals, we consider three main
-parties: the challenge designer, the challenge solver, and the competition
-organiser.
+The `vulnspec` language and tooling has been built to satisfy several design
+goals, that have been critical in choosing what functionality to prioritise
+implementing. In these goals, we consider three main users: the challenge
+designer, the challenge solver, and the competition organiser.
 
 The challenge creator should be able to:
 
 - Encode stack overflow and format string exploits by detailing
-  abstract memory layouts in the spatial domain.
+  abstract memory layouts over the spatial domain.
 - Encode heap exploits and race conditions by defining control flow over the
   abstract temporal domain.
-- Be able to encode all standard C expressions and statements, either in
-  `vulnspec`, or in C directly.
+- Encode all standard C expressions and statements, either in `vulnspec`, or as
+  C literals.
 
-Then, the challenge solver should:
+Then, the challenge solver should be able to:
 
-- Not be able to use their exact solve techniques, such as a script, on a
-  challenge from the same challenge spec, but with a different random seed.
-- Likewise, both challenges should appear visually different, with different
-  program structure, variable names, etc.
+- Observe distinct differences in challenges generated from the same
+  specification.
+- Solve a single challenge instance multiple times, to learn more about the
+  showcased vulnerability.
 
 Finally, the competition organiser (or in an academic setting, the module
 leader) should be able to:
 
 - Automatically check that generated challenges are solvable.
-- Be able to easily deploy and deliver challenges to players, in some standard
-  form, or as part of a larger system, such as a VM.
+- Easily deploy and deliver challenges to players, in some standard format.
 
 ## Stages
 
 To translate from the raw text specification into binary artifacts, we move
-through a number of discrete stages of processing. These stages move from a
-low-level representation of the specification to a high-level, programmatic
+through a number of discrete stages of processing. These stages translate from
+a low-level representation of the specification to a high-level, programmatic
 view, finally producing low-level C code as an output.
 
-These stages are:
+Specifically,
 
-- [**Parsing**](#lexical-analysis-and-parsing) to produce an Abstract Syntax Tree
-- [**Type checking**](#type-checking) to sanity check the Abstract Syntax Tree's semantic validity
-- [**Translation**](#translation) to an Abstract Syntax Graph, referred to as the block-chunk
+- [**Parsing**](#parsing) to produce an Abstract Syntax Tree (AST)
+- [**Type checking**](#type-checking) to check the AST's semantic validity
+- [**Translation**](#translation) to an Abstract Syntax Graph (ASG), referred to as the block-chunk
   graph
 - [**Interpretation**](#interpretation) to transform and remove all blocks and chunks
-- [**Code generation**](#code-generation) to produce code in the target output language
+- [**Code generation**](#code-generation) to produce C code
 - Optional [**environment construction**](#environments) to produce binaries and Docker
   containers
 
-Aside from these core stages, several minor operations and debugging steps are
-also performed in-between them, to provide additional smaller pieces of
-functionality that are only really possible to achieve at that exact level of
-representation.
+Aside from these core stages, several minor operations and debugging steps may
+be performed in-between, to provide additional functionality and randomization.
 
 ## Specification
 
-Vulnspec is designed to a minimal programming language that can express
-vulnerabilities. As such, its syntax mirrors C, however, there are a couple of
-high-level constructs that C doesn't have.
+In this chapter, we outline the important syntactical constructs within
+vulnspec. As it is designed as a minimal language that can express
+vulnerabilities, its syntax mirrors C in many places, therefore, we focus on
+the main differences, not the similarities.
 
 ### Blocks and Chunks
 
 Blocks and chunks are the highest level constructs in the specification that
 represent pieces of code and data respectively.
 
-A block is essentially a procedure - additionally, it can't take any arguments
-or return values, it just represents code that is executed.
+A block is essentially a procedure -- it can't take any arguments or return
+values, it just represents code that is executed.
 
 ```
 block foo {
@@ -272,9 +266,9 @@ block foo {
 }
 ```
 
-Blocks can call each other, forming a call graph. This isn't limited to just a
-directed acyclic graph; blocks can call each other and form co-recursive
-structures.
+Blocks can call each other, forming a directed call graph. This isn't limited
+to an acyclic graph; blocks can call each other and even form recursive
+structures:
 
 ```
 block first {
@@ -288,10 +282,10 @@ block second {
 }
 ```
 
-In scenarios like this one, where a block is only referenced by one other
-block, we can use an implicit block split, with an improvement in readability.
-This results in the same block-chunk graph later in the pipeline, as the splits
-are removed are translated into calls directly.
+In scenarios like the one above, where a block is only referenced by one other
+block, we can use an implicit block split. This is semantically equivalent in
+the block-chunk graph later in the pipeline, where the two syntaxes are
+reconciled.
 
 ```
 block first {
@@ -303,21 +297,21 @@ block first {
 }
 ```
 
-A chunk is a grouped collection of variable declarations. During the process of
-synthesis, vulnspec keeps these variable declarations together, so that they
-are next to each other in memory, in the same order that they are declared in.
+To use variables, we group declarations into a collection called a chunk.
+During synthesis, vulnspec keeps these declarations together, so that the
+variables appear contiguously in memory, for example:
 
 ```
 chunk x : [64]char,  // if x overflows...
       y : int        // ...then it overflows into y!
 ```
 
-A program can define as many chunks as it likes, although vulnspec only
-guarantees proximity for variables placed into the same chunk.
+A specification can define as many chunks as it likes, however, proximity is
+only guaranteed for variables placed into the same chunk.
 
 Additionally, both blocks and chunks can contain constraints enforcing an
-interpretation, or somehow dictating how vulnspec should treat the block or
-chunk now or later in the pipeline.
+[interpretation](#interpretation) which dictates how vulnspec should treat the
+block later in the pipeline.
 
 ```
 chunk (global) a : int
@@ -330,63 +324,59 @@ block (func) g {
 }
 ```
 
-In the above:
+In the above example:
 
-- `a` is forced to be a global variable, and to appear in either the `.data` or
+- `a` is forced to be a global variable, appearing in either the `.data` or
   `.bss` section of the binary
 - `b` is forced to be a local variable, and to appear as part of a stack frame
 - `c` will be only initialised once, no matter whether it is local or global
 - `f` is forced to be inlined into all blocks that call it
-- `g` is forced to be a separate function, and is function-called by all blocks
-  that call it
+- `g` is forced to be a separate function
 
-See **[Interpretation](#interpretation)** for more information on
-constraint resolution, removal of chunks and blocks, and translation into
-C-style primitives.
+With these high-level primitives, we can express all our important
+relationships between code and data.
 
 ### Statements
 
-To specify behaviour in the specification, blocks can contain any number of
-statements. Vulnspec is kept fairly minimal with the variety of statements it
-offers:
+To specify behaviour in the specification, blocks contain statements, and all
+statements must appear in blocks. Vulnspec is kept fairly minimal with the
+variety of statements it offers:
 
 | Statement | Description |
 | :-------- | :---------- |
-| Call | Transfer execution control to another block and return control to the current block after it finishes. |
+| Call | Transfer execution to another block and return to the current block after it terminates. |
 | If | Conditionally execute a series of statements based on a boolean expression. |
 | While | Repeatedly execute a series of statements based on a boolean expression. |
-| Assignment | Assign the value of an expression to an lvalue, such as a variable, dereferenced pointer or array cell. |
-| Expression | Determine the value of an expression, throwing away the result at the end, effectively relying on the side-effects of the expression. |
+| Assignment | Assign the value of an expression to an lvalue. |
+| Expression | Evaluate an expression, discarding the result at the end, relying on its side-effects. |
 
 ### Expressions
 
-Expressions are vital to expressing any of the above statements. Essentially an
-expression is a way of combining separate individual raw values and variables
-to yield a computed result. This result may be `void`, as in the case of a
-statement that only calls a `void` function, but can be any type of value that
-can be defined in the language.
+Expressions are vital in most of the above statements. An expression is a way
+of combining separate individual raw values and variables to yield a computed
+result. This result may be `void`, as in the case of a statement that only
+calls a `void` function, but can be any value that can be defined in the
+language.
 
 These expressions can be used purely for their side effects, such as with an
-expression statement, or may be stored in an lvalue, a minimal subset of
-expressions that define values that can be assigned to.
+expression statement, or may be stored in an lvalue (a subset of expressions
+that that can be assigned to) as part of an assignment, etc.
 
-At the core of the expressions, we have variables, as well as literal values,
-such as `1` or `"Hello, world"`. All the different types of values available
-are shown in the following table:
+At the most basic, we have variables, such as $x$, and literal values, such as
+`1` or `"Hello, world"`. For each variable and value, we can assign a type:
 
 | Value type | Description |
 | :--------- | :---------- |
 | `int`      | An integer represented as a series of digits, with a base |
 | `float`    | A floating-point number represented as a whole number and a fractional part |
-| `char`     | A single character as an integer in a byte |
-| `string`   | A series of characters |
+| `char`     | A single character as an integer in the range $(0, 255)$ |
+| `string`   | A sequence of characters |
 | `bool`     | A boolean value, either `true` or `false` |
 | `template` | A value calculated from a python snippet, see **[Templates](#templates)** |
 
-Additionally, we have a special kind of literal value, which are C-literals.
-Because vulnspec is limited in the types of expressions and statements that it
-offers, it may be useful to insert snippets of actual C code into it, for
-example, to call a macro, which are not supported by vulnspec directly.
+Additionally, we define C-literals, a special basic expression, allowing
+insertion of C snippets directly into vulnspec. This can be used, for example,
+to call a macro, which are not defined as builtins in the language.
 
 ```
 include "math.h"
@@ -396,18 +386,16 @@ block calc {
 }
 ```
 
-This block uses the `M_PI` value defined in the `math.h` header. Note that in
-this case, we have to explicitly include the header, while normally we don't
-have to. For more information, see **[External Library Integration](#external-library-integration)**.
+The above uses the `M_PI` value defined in the `math.h` header. Note that, in
+this case, we explicitly include the header, which normally would not be
+required. For more information, see **[External Library Integration](#external-library-integration)**.
 
 ### Grammar
 
-An annotated simplified EBNF grammar is defined below.
-
-This grammar isn't quite complete, mostly for simplicity. As part of this, it
-ignores white-space, including newlines, as well as a couple of other minor
-constructs and hacks used to optimise and clarify the implementation of the
-parser.
+A simplified EBNF grammar for vulnspec is defined below. This grammar is kept
+simple, at the cost of being slightly inaccurate -- specifically, it ignores
+all white-space, as well as a number of minor hacks used to clarify and
+optimise the parser's implementation.
 
 ```
 (* a specification is a series of high-level pieces *)
@@ -497,23 +485,23 @@ boolean = "true" | "false"
 
 # Implementation
 
-In this chapter, we present how the above design goals and specification is
-implemented to produce the vulnspec synthesis tool. The tool is implemented in
-around 8000 lines of Python code and includes a lexer and parser written from
-scratch, a minimal type checking system, libc integration, randomisation
-procedures and final challenge generation and output.
+In this chapter, we demonstrate how the above design goals are implemented to
+produce the vulnspec synthesis tool. The tool is implemented in around 8000
+lines of Python code and includes a hand-written lexer and parser, a minimal
+type-checking system, libc integration, various randomisation procedures and
+a final challenge generator.
 
-The structure of this section mirrors the pipeline laid out in the **Stages**
-section above and moves from the plain-text vulnspec specification to the final
-challenge binaries and environments.
+The structure of this chapter mirrors the pipeline laid out in the
+**[Stages](#stages)** section above, moving through the pipeline from the
+plain-text vulnspec specification to the final artifacts.
 
-## Lexical analysis and parsing
+## Parsing
 
-To perform any meaningful analysis of the specification, it first needs to be
-parsed into an Abstract Syntax Tree. This process is broken into two pieces,
-lexing and parsing.
+To perform any meaningful analysis of the specification, it needs to be parsed
+into an AST. This process is broken into two pieces, lexical analysis and
+parsing.
 
-To demonstrate, we'll follow an example specification through the parsing pipeline:
+To demonstrate, we'll follow an example specification through parsing:
 
 ```
 chunk x : int = 0
@@ -526,24 +514,18 @@ block main {
 }
 ```
 
-In the lexing stage, we break up the raw text input into a series of tokens, or
-terminals, of which there are 38 distinct types. The problem of producing a
-series of tokens is trivially broken down into producing a single token at a
-position in the raw stream and moving the position for the next token to be
-read. Our algorithm then just becomes an iterative algorithm, repeating until
-we reach the end of the stream.
+During lexical analysis, we break up the raw text input into a series of
+tokens, or terminals, of which there are 38 distinct types. The problem of
+producing a series of tokens is reduced to producing a single token from a
+pointer into the text stream and then adjusting the position for the next
+token. Our algorithm then becomes an iterative algorithm, repeating until we
+reach the end of the stream.
 
-At this stage, we specifically only handle any language features that are
-*regular*, those that can be matched by a regular expression, or what we use, a
-Deterministic Finite Automaton. Among the more complex structures that we
-handle are: skipping past comments, parsing strings, defining templates, and
-defining a wide variety of unary and binary operators, many of which have
-similar prefixes. For each individual atomic language feature, we produce a
-token object, containing a type, a possible lexeme (which represents the data
-read), and a position and length of the token (which are pretty-printing error
-messages later if necessary).
+For each individual language feature, we produce a token object, containing a
+type, a possible lexeme (representing the data read), and the position and
+length of the token.
 
-In our example:
+From our example:
 
 ```
 <Reserved "chunk">, <Name "x">, <Colon>, <Name "int">, <Assign>, <Integer ["0", 10]>, <Newline>
@@ -557,87 +539,57 @@ In our example:
 <EOF>
 ```
 
-In the parsing stage, we read tokens from the stream and attempt to form them
-into nodes of a tree. To do this, we use a recursive-descent parser, which
-expresses terminals in the language by consuming tokens from the token stream,
-and non-terminals as functions that can consume terminals, or call other
-non-terminals. In this way, the structure of the call graph of the parser
-mirrors the structure of the produced AST.
+During parsing, we read tokens from the stream and form them into AST nodes.
+For this, we use a recursive-descent parser, which expresses terminals in the
+language by consuming tokens from the token stream, and non-terminals as
+functions that can consume terminals, or call other non-terminals. In this way,
+the structure of the call graph of the parser mirrors the structure of the
+produced AST.
 
-The parser is almost (and initially was) an $LL(k)$ grammar, which allowed the
-parser to be entirely predictive. Unfortunately, because of some of the
-complexity of the language, its not possible to easily define some of the
-structures in the language entirely predictively and so some backtracking is
-required. For example, when parsing an expression, it may end with an array
-index - so we can attempt to parse that, but it may fail, so we backtrack to
-before we tried. Similarly, when attempting to parse a statement, there are two
-possibilities, an lvalue on the left of an assignment, or an expression as part
-of an expression statement. There's no way with $k$ steps of look-ahead to work
-out which one is which, so we try one, then the other, using backtracking.
+The parser is almost an $LL(k)$ grammar, which allowed the parser to be
+entirely predictive. Unfortunately, because of the complexity of the language,
+some of the structures in the language cannot be parsed predictively and so
+some backtracking is required. For example, when parsing a statement, there are
+two possible non-terminals -- an lvalue (on the left of an assignment), or an
+expression (part of an expression statement). There's no way with $k$ items of
+look-ahead to work out which one is which, so we can try one, then the other,
+using backtracking.
 
-It's certainly possible to reduce the current grammar to an $LL(k)$ one and so
-allow parsing in linear time with predictive parsing, but since most
-specifications are quite small, it felt like an unnecessary optimisation, when
-other features needed development.
-
-At the end of parsing, we produce an Abstract Syntax Tree for the entire
-specification, which can now be traversed and manipulated in later stages.
+At the end of parsing, we now have an AST, representing the entire
+specification, which can now be programmatically later.
 
 ![Abstract Syntax Tree diagram](assets/diagrams/parser/ast.svg)
 
 ## Type checking
 
-After constructing an Abstract Syntax Tree from the original stream of data, we
-need some way of semantically validating it, to ensure that the challenge
-designer has not made mistakes that would cause problems in later stages (such
-as using undeclared variables) or would generate invalid C code output (such as
-declaring variables to be of a non-existent type). To perform this
-verification on the tree, we use a simple type-checking system.
+After constructing an AST from the original text stream, we need some way of
+validating its semantics, to ensure that the challenge designer has not made
+some mistake that could introduce problems later (such as calling an undefined
+block) or would generate invalid C code (such as declaring variables to be of a
+non-existent type). To perform this verification, we use a simple type-checking
+system.
 
-Essentially, we traverse the tree using a visitor pattern, at each level
-returning a type up to the next level, which can then be checked against other
-known and explicitly annotated types, or types similarly derived from the AST.
-For example, during an assignment, the types of both sides are checked against
-each other for compatibility, while an if statement will check that its
-condition is compatible as a boolean value.
+At its most basic, we traverse the tree using a visitor pattern, at each level
+returning a type back up, which can then be checked against other known types,
+or other types similarly derived from the AST. For instance, during an
+assignment, the types of both sides are checked against each other for
+compatibility.
 
-However, because we are aiming for compatibility with the C type system and
-since we are compiling to C, we can't create an entirely new type system from
-scratch. In fact, because the C type system is so complex and built upon
-decades of historical baggage, its incredibly difficult to replicate perfectly,
-specifically, the implicit type conversion and promotion rules. As a result, we
-construct a minimal type model of how C performs its checks and rely on
-explicit casts for cases that fall outside of more common use cases.
+However, because we are aiming for compatibility with the C type system, we
+cannot introduce an entirely new type system. In fact, because the C type
+system is so complex and built upon decades of historical baggage, it's
+incredibly difficult to replicate perfectly, particularly regarding the
+implicit type conversion and promotion rules. To avoid this, we construct a
+minimal model of how C performs type checking to handle all but the most
+complex cases.
 
-Our type model can be described by defining two kinds of types - concrete
-types, such as an integer `int` or a string `*char`, and abstract types, such
-as `Integral` or `Pointer`, which we call "meta"-types. Between these two
-kinds, we can establish a simple function that maps concrete types into their
-respective abstract types. **more elaboration**
+Our type model defines two kinds of types - concrete types, such as an integer
+`int` or a string `*char`, and abstract types, such as `Integral` or `Pointer`,
+which we call "meta"-types. Between these two kinds, we establish a simple
+function that maps concrete types into their respective abstract types,
+manually defined in a `config.yaml`:
 
-When checking for compatibility between two types, its not sufficient
-to check that a type is identical to another type, like in more strongly-typed
-languages; instead, we need to verify that a type can be used in the context of
-another type. For example, in C, integers are effectively used as Boolean,
-pointers are used as integers, etc. To help express this, we construct a
-directed meta-type graph, with the vertices as meta-types and the edges as
-valid implicit conversions:
-
-![Meta-type graph](assets/diagrams/meta_types/graph.svg){ width=50% }
-
-Then, the question of compatibility simply becomes one of reachability, i.e. to
-use type $A$ in the context of type $B$, the meta-type of $B$ must be reachable
-on a path reachable from the meta-type of $A$.  Using this, we can define an
-additional notion of type checking, called "fuzzy" typing. This technique
-allows easy checking of addition with integers and floats, and converting
-between pointers, but requires extra thought when trying to perform unsafe
-operations, like downcast from floats to ints, or converting integers back to
-pointers.
-
-This graph is encoded in the `config.yaml` file for the builtins directory (and
-shortened for succinctness):
-
-```yaml
+```
 ...
 core:
   types:
@@ -659,52 +611,57 @@ core:
       - double complex
       - long double complex
     pointer:
-  typemap:
-    boolean: [void, integral]
-    integral: [void, floating]
-    floating: [void, complex]
-    pointer: [void, integral]
-    complex: [void]
 ...
 ```
 
-Beyond the explicit graph here, we additionally define a universal meta-type,
+When checking for compatibility between two types, its not sufficient to check
+that a type is identical to another type, like in strongly-typed languages;
+instead, we need to verify that a type can be used in the context of another
+type. For example, in C, integers are used as Booleans, pointers are used as
+integers, etc. To help express this, we construct a directed meta-type graph
+(also in the above config file), with the vertices as meta-types and the edges
+as valid implicit conversions:
+
+![Meta-type graph](assets/diagrams/meta_types/graph.svg){ width=50% }
+
+Then, the question of compatibility simply becomes one of reachability, i.e. to
+use type $A$ in the context of type $B$, the meta-type of $B$ must appear in a
+path originating from the meta-type of $A$. This technique allows checking most
+safe operations, while requiring extra care when trying unsafe operations, like
+downcasting from floats to ints.
+
+Beyond the meta-type graph here, we additionally define a universal meta-type,
 which skips the reachability check entirely, always returning true; this type
 can be assigned anything and used anywhere. This is the meta-type that we use
-for unknown meta-types, such as with external library integrations. This type
-isn't notated in the graph, since its not defined as part of it, but rather as
-an additional concept on top of it.
+when the meta-type is unknown, such as with external library integrations. This
+type isn't notated in the graph directly, since it's defined as an additional
+abstraction on top.
 
-Note that the above graph is only a rough approximation of the C implicit type
-system conversions and could be made a lot more complete with the further
-distinction between more types, such as differently sized types, or signed and
-unsigned integers, etc. Additionally, a couple of checks cannot be expressed by
-this graph easily:
+Note that the above graph is only a rough approximation of the actual C type
+system and could be made more complete with further distinction between types,
+such as differently sized types, or signed and unsigned integers, etc.
+Additionally, a couple of checks cannot be expressed by this graph easily, and
+are encoding manually:
 
 - Arrays can be passed as arguments, but cannot be assigned to.
 - Functions can never be directly assigned to or passed around.
 
 ## External library integration
 
-The vast majority of pwnable CTF challenges require some interaction with libc,
-the C standard library, either for the utility functions, such as file
-input/output and networking tools, or to exploit vulnerable functions such as
-`system` or `gets`. While it would be feasible to integrate into libc using a
-form of the C-language literals as detailed above, this would essentially
-require the challenge designer to write C *and* vulnspec, without any form of
-safety and sanity checks from type-checking.
+The majority of binary CTF challenges require interaction with the C standard
+library (libc), either for the utility functions, such as file input and
+output, or to expose vulnerable functions such as `system` or `gets`. To better
+facilitate such integration of libc, we provide a utility to generate listings
+of all functions, variables and types in specified libraries, which can then be
+referenced using special syntax from vulnspec. This utility is bundled as the
+`builtin_generator` tool which is also used to generate the primitive types and
+the meta-type graph from the previous section.
 
-As such, we provide a utility to generate listings of all functions, variables
-and types in libc, which can then be referenced using special syntax from
-vulnspec specifications. This utility is bundled along with the
-`builtin_generator` tool which is used to generate primitive types and the
-meta-type graph from the previous section.
-
-In the `config.yaml` in the builtins directory, in addition to all the fields
-[already detailed](#type-checking), we introduce a `libraries` key that
-specifies information relevant to parsing and loading data from as many
-libraries as we want - however, for mostly practical reasons, we only include
-libc, however, this approach could be extended to any third-party libraries.
+In addition to the fields [already detailed](#type-checking) in the type config
+file, we introduce a `libraries` key that specifies information relevant to
+parsing and loading data from as many libraries as we want - however, for
+mostly practical reasons, we only include libc, however, this approach could be
+extended to any third-party libraries.
 
 ```yaml
 ...
@@ -775,14 +732,13 @@ utilise libraries.
 
 ## Translation
 
-Once the Abstract Syntax Tree has been checked and transformed, we can convert
-it to a higher-level representation, the block-chunk graph. In this
-representation, instead of merely representing the low-level syntax of the
-language, we more completely represent the relationships between individual
-blocks and their calls, and chunks and their variables. Whereas in the AST we
-represent calls and variable references simply by using their names, in the
-block-chunk graph, we use actual pointers (or the Python equivalent) to show
-the relationships.
+Once the AST has been checked and transformed, we can convert it to a
+higher-level representation, the block-chunk graph. In this representation,
+instead of merely representing the low-level syntax of the language, we more
+completely represent the relationships between individual blocks and their
+calls, and chunks and their variables. Whereas in the AST we represent calls
+and variable references simply by using their names, in the block-chunk graph,
+we use actual pointers (or the Python equivalent) to show the relationships.
 
 This has enormous implications in how we can traverse the graph, easily
 allowing defining complex operations such as structural traversals and
@@ -1339,7 +1295,7 @@ increasingly similar to the source material, as shown in the following table
 | 2 | `n`, `qq2`, `ts`, `b`, `r03` | `ify_wattrl`, `istente`, `inify`, `pthresub`, `xmktimemsgs` |
 | 3 | `tmp`, `tls_tail`, `v5`, `wcs`, `test` | `weak_alias`, `ldir_r`, `sched_secmp`, `ctions_getln`, `isspawn_find` |
 
-As we move towards higher values of $k$, the results become more and more
+As we move towards higher values of $k$, the results become increasingly
 readable and more similar to actual names that we would expect a programmer to
 name variables and functions.
 
@@ -1373,9 +1329,8 @@ $O(\log n)$ time, instead of a naive linear search that takes $O(n)$.
 
 ## Code generation
 
-With all blocks and chunks constrained and properly interpreted and the
-entire Abstract Syntax Graph rewritten into C-style constructs, we can now
-generate C code.
+With all blocks and chunks constrained and properly interpreted and the entire
+graph rewritten into C-style constructs, we can now generate C code.
 
 - Iterate over all global variables and externals
   - Translate types
