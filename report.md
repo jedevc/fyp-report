@@ -122,7 +122,7 @@ is often a single challenge binary, with only a single solution.
 This binary suffers from a lack of exploit variety, leading to an increased
 opportunity for CTF players to share solutions. Some effort has been made to
 prevent this form of cheating, specifically by preventing flag-sharing through
-flag randomization. However, some cheating may still go unnoticed, due to more
+flag randomisation. However, some cheating may still go unnoticed, due to more
 complex "solve-sharing", in which players share detailed write-ups or
 solve-scripts with each other, allowing them to gain different flags, but using
 an identical technique. We want to provide a way to mitigate against this more
@@ -241,7 +241,7 @@ Specifically,
   containers
 
 Aside from these core stages, several minor operations and debugging steps may
-be performed in-between, to provide additional functionality and randomization.
+be performed in-between, to provide additional functionality and randomisation.
 
 ## Specification
 
@@ -363,7 +363,8 @@ expression statement, or may be stored in an lvalue (a subset of expressions
 that that can be assigned to) as part of an assignment, etc.
 
 At the most basic, we have variables, such as $x$, and literal values, such as
-`1` or `"Hello, world"`. For each variable and value, we can assign a type:
+`1` or `"Hello, world"`. For each literal value, we can assign a token type
+from the following table:
 
 | Value type | Description |
 | :--------- | :---------- |
@@ -1072,33 +1073,33 @@ include all the blocks, chunks and externs that it references.
 
 ### Templates
 
-Templates are a powerful technique to modify parts of the program during
-synthesis, specifically over the spatial domain. Essentially, they are unfixed abstract
-values that take on a single concrete value for a single
-synthesis. This instantiation of abstract to concrete values is performed after
-parsing, but before translation into the block-chunk graph.
+Templates are a powerful technique for modifying parts of the program during
+synthesis, specifically over the spatial domain. Essentially, they are unfixed
+abstract values that take on a new concrete value for each synthesis. This
+instantiation of abstract to concrete values is performed after parsing, but
+before translation into the block-chunk graph.
 
-Each template has 2 components: a name and an optional definition (note that
-for the first usage of a template, the definition is not optional). In
-vulnspec, they are written: `<Name; Definition>` or `<Name>`, where `Name` is a
-valid vulnspec name and `Definition` is a Python expression. A templated value
-can occur wherever a normal value might be expected.
+Each template has 2 components: a name and an optional definition. In vulnspec,
+they are written: `<Name; Definition>` or `<Name>`, where `Name` is a valid
+vulnspec name and `Definition` is any Python expression. A templated value can
+occur wherever a non-templated one might be expected.
 
-During template instantiation, we traverse all the chunks, then all the blocks
-in their order of declaration. When we encounter a template node, we evaluate
-the Python expression and replace it with a `ValueNode` dependent on the type of
-the result. For example, we replace a Python `int` with an `IntValueNode`, a
-Python `str` with a `StringValueNode`, etc. If a template definition is not
-provided, then we simply retrieve a cached result from a previously
-instantiated template with the same name.
+During template instantiation, we traverse all templates, all chunks, then
+finally all blocks in their respective orders of declaration. When we encounter
+a template node, we evaluate the Python expression and replace it with a
+`ValueNode` dependent on the type of the result. For example, we replace a
+Python `int` with an `IntValueNode`, a Python `str` with a `StringValueNode`,
+etc. If a template definition is not provided, then we simply retrieve the
+cached result from a previously instantiated template with the same name.
 
-During template evaluation we provide access to some Python variables,
-functions and modules to more easily create complex expressions. In the global
-scope, we allow access to useful libraries (`random`, `string`, etc), as well
-as the translations from vulnspec to C names. Meanwhile, in the local scope, we
-allow referencing any already instantiated template values - this allows
-creating template values that depend on the value of another template, a vital
-feature in constructing vulnerable programs.
+During template evaluation, which uses `eval`, we provide access to some Python
+variables, functions and modules in order to allow creating complex
+expressions. In the global scope, we allow access to useful libraries
+(`random`, `string`, etc), as well as the translations from vulnspec to C
+names. Meanwhile, in the local scope, we allow referencing any already
+instantiated templates - this allows creating templates that depend
+on the value of another template, a vital feature in constructing vulnerable
+programs.
 
 For example:
 
@@ -1126,7 +1127,6 @@ chunk a : int
 block x {
   a = sizeof(uint8_t@libc.stdint)
 }
-
 block y {
   a = $(sizeof(<T; table.types["uint8_t@libc"]>))
 }
@@ -1134,12 +1134,12 @@ block y {
 
 ### Random name generation
 
-An important part of generating some level of variety between different output
-results is generating new names for variables and functions - different names
-will make the same program look different, even though they may be otherwise
-identical. However, completely random names will appear nonsensical, so to
-prevent this, we use a Markov chain model based on existing libraries,
-specifically the same `libmusl` as used to provide libc integration.
+A vital component of ensuring surface-level differences between synthesis
+results lies in generating new names for variables and functions - different
+names will make the same program look different, even though they may be
+otherwise identical. However, completely random names would appear nonsensical,
+so to provide some structure, we use a Markov chain model based on existing
+libraries, specifically the same `libmusl` used to provide libc integration.
 
 For our purposes, we define a Markov chain model as a mapping from $k$-length
 strings to a weighted list of characters. From this, we can traverse over the
@@ -1152,7 +1152,7 @@ mapping, to produce a final word. The algorithm is described as follows:
   - Look up the above suffix in the Markov chain mapping to a weighted list of characters
   - Randomly select a character $c$ from the weighted list.
     - If $c = \$$, the special end-of-word character, break the loop.
-    - Otherwise, append $c$ to $s$ and continue the loop.
+    - Otherwise, append $c$ to $s$.
 - Return $s$ as the generated name
 
 Additionally, we also impose some minor sanity checks on the generated results,
@@ -1169,7 +1169,7 @@ is trained on the function definition and prototype names.
 All strings $s$ that are generated by this algorithm have the useful feature
 that every sub-string of length $k + 1$ in $s$ is present somewhere in a name in
 the source content of libc. As the value of $k$ increases, the outputs become
-increasingly similar to the source material, as shown in the following table
+increasingly similar to the source material, as shown in the following table:
 
 | $k$-value | Variables | Functions |
 | :-------- | :-------- | :-------- |
@@ -1189,8 +1189,8 @@ consistency. To do this, we settle on an approach that allows us to select
 In this model, we create sub-models for $k = 1$, $k = 2$, etc. up to $k = n$.
 Then when generating a new character we randomly select a model using a
 triangular distribution to weight towards where $k = \frac{n}{2}$. If we
-discover that we can't find the suffix in the selected model, we continue to
-select models until we can find the suffix.
+discover that we can't find a suffix in the selected model, we continue to
+select models until we can find a suffix.
 
 As expected, this generates a combination of the results from above:
 
@@ -1206,52 +1206,53 @@ generating the model described above.
 
 To optimise picking from the weighted list, instead of storing the individual
 weight of each possibility, we store the cumulative weight of all possibilities
-so far. This allows us to select randomly from the list using linear search in
+so far. This allows us to select randomly from the list using binary search in
 $O(\log n)$ time, instead of a naive linear search that takes $O(n)$.
 
 ## Code generation
 
-With all blocks and chunks constrained and properly interpreted and the entire
-graph rewritten into C-style constructs, we can now generate C code.
+With all blocks and chunks interpreted, the graph rewritten with C-style
+constructs, and randomisation complete, we can now output code.
 
-- Iterate over all global variables and externals
-  - Translate types
-- Create function prototypes
-  - Use the generated function signatures created during [Function call reduction](#function-call-reduction)
-- One by one, for each function:
-  - Instantiate local variables
-  - Iterate over all statements
-    - Use C syntax
-    - Translate variables and function names
-      - When finding usages of external libraries, add the respective header include
-- For main specifically:
-  - Add calls to setbuf(stdout, NULL) and setbuf(stderr, NULL)
-  - No signature will have been created for main, but, always define it with
-    argc and argv
+The general process for this involves iterating over all functions and global
+variables, creating a string for each variable declaration and all statements
+and expressions, and recombining them into C code. However, the code is not
+immediately output and is instead appended to the results of the rest of the
+code generation.
 
-Finally, with all the rest of the code produced, we prepend all the required
-headers for the program, as determined during graph traversal. Then the final
-result can be output to a C file. As a final finishing touch, the C code is
-optionally run through `clang-format` [@clang-format], by default, using the
-webkit style to provide a more consistent styling.
+For the rest, we create function prototypes for every function except `main`
+(since no other function should call to it). This is because the order of
+functions is unpredictable for each synthesis run, and functions may refer to
+each other in co-recursive structures which require prototypes.
+
+Additionally, as we inspect each variable access as we output it, we inspect if
+it uses an external library - if it does, we generate the correct `#include`
+directive, adding it to a set. Then these includes are prefixed to the C code,
+along with the other includes that may have been manually specified.
+
+Finally, we patch the function signature of `main` to allow use of `argc` and
+`argv`. We also add calls to `setbuf(stdout, NULL)` and `setbuf(stderr, NULL)`
+to disable buffering on both standard output streams, which can cause problems
+when deployed into environments.
+
+Finally, with all the rest of the code produced, we prepend the optional file
+header containing information on how the code was generated and instructions on
+how to build it. Then the final result can be output to a C file. As a final
+finishing touch, the C code is optionally run through `clang-format`
+[@clang-format] for greater consistency.
 
 ## Environments
 
-At the end of the pipeline we produce valid, working C code that contains the
-desired vulnerabilities. However, vulnerable C code by itself doesn't guarantee
-exploitation, or even if it does, provide no details as to the difficulty of
-producing a working exploit - these factors often down to compiler options,
-kernel settings and the setup of the environment.
+At the end of the pipeline, vulnspec produces C code that contains the desired
+vulnerabilities. However, vulnerable C code by itself doesn't guarantee
+exploitation and provide no details as to the difficulty of producing a working
+exploit - these factors come down to compiler options, kernel settings and
+the environment setup.
 
 Therefore, to bridge this gap, we provide some additional utilities for
 producing challenge binaries, suitable environments to run them in, and
-automatic solution script generation to validate that the produced programs are
-solvable.
-
-These binaries and environments are created based on a variety of comment-based
-configuration options. Defining these configuration options in the comments
-clearly separates the process of program synthesis from the optional process of
-generating valid environments.
+solution script generation to verify that the produced programs are solvable.
+These are created based on a variety of comment-based configuration options.
 
 These configuration options are allocated into 4 groups:
 
@@ -1261,41 +1262,38 @@ These configuration options are allocated into 4 groups:
 - Additional files
 
 These options are used across two phases, compilation and environment
-generation.
+generation, see [Appendix X](#appendix-x) for more information.
 
-During compilation, we use the configuration options to:
+During compilation, we use the configuration options to determine:
 
-- Determine which compiler to use
-- Decide which architecture to compile for (most frequently used to switch between 32
+- Which compiler to use
+- Which architecture to compile for (most frequently used to switch between 32
   and 64 bit)
-- Decide whether to strip the final executable or not (to make for a harder
+- Whether to strip the final executable or not (to make for a harder
   reverse-engineering experience)
-- Decide whether to generate debugging information
-- Enable various security settings, such as NX protections, PIE executables,
-  stack canaries and RELRO.
+- Whether to generate debugging information
+- How to set various security options, such as NX protection,
+  position-independent code, stack canaries and RELRO.
 
 During environment generation, we use the options to:
 
-- Create a system layout that allows for reading the flag on successful
-  exploitation of the vulnerable program
+- Create a exploit pathway that allows reading the flag on successful
+  exploitation
 - Automatically build a Dockerfile to generate a Docker image for deployment
 
-#### Compilation
+### Compilation
 
 In the optional compilation phase, the configuration options are used to create
 a series of commands that when run in a usual Linux shell (and a standard set
 of essential compiler software), will produce an exploitable binary.
 
-By default, compiler options are added to suppress addition of useful security
+By default, compiler options are added to suppress addition of security
 protections, such as NX, PIE and RELRO. These options must manually be enabled,
 essentially requiring the challenge designer to consciously make the challenge
 more difficult by enabling new protections.
 
 These build commands are prefixed to the file output as a C multi-line comment,
-to indicate how the file should be correctly compiled - if desired, this output
-can be suppressed and the file compiled manually. The vulnspec command line
-tool additionally contains the `build` sub-command, which reads the build
-commands from a synthesised C file and runs them automatically.
+to indicate how the file should be correctly compiled:
 
 ```c
 /*
@@ -1306,7 +1304,11 @@ commands from a synthesised C file and runs them automatically.
  */
 ```
 
-#### Environment
+The vulnspec command-line tool additionally contains the `build` sub-command,
+which reads the build commands from a synthesised C file and runs them
+automatically.
+
+### Environment
 
 In the optional environment generation phase, the configuration options are
 used to fully build a challenge binary, as well as output a Dockerfile for
