@@ -1316,27 +1316,27 @@ building and hosting an environment in which the challenge can be successfully
 run.
 
 Docker is an open-source tool providing paravirtualization to deliver and run
-applications along with their environments in fully complete *containers*
-(**reference needed**). Each container is based off of an *image*, which are
-built using commands from a Dockerfile. By having vulnspec output a Dockerfile,
-we can create an easily replicable environment for CTF organisers and players
-to run their challenges in, without having to deal with complex dependencies or
-setups.
+applications along with their environments in fully complete containers
+[@wiki-docker]. Each container is based off of an image, each of which is built
+using commands from a Dockerfile. By having vulnspec output a Dockerfile, we
+can create an easily replicable environment for CTF organisers and players to
+run their challenges in.
 
-The setup of the image is rather typical, however, the process allows creating
-a collection of pre-defined setups for running the challenge binary. These setups
-are identified by a 3-tuple `<access>-<interface>-<method>`.
+The setup of the challenge environment is rather typical to most Dockerfiles,
+however, vulnspec allows creating setups from a pre-defined collection for
+encapsulating the challenge binary. Each setup is identified by a 3-tuple
+`<access>-<interface>-<method>`.
 
-The `access` determines how the challenge can be accessed, specifically:
+The `access` determines how the challenge can be accessed:
 
 - Over `tcp` (using a netcat forking server),
 - Over `ssh` (using OpenSSH),
 - Over `raw` (the challenge itself provides access mechanisms).
 
-The `interface` determines how the challenge is interface with, specifically:
+The `interface` determines how the challenge is interface with:
 
-- By `shell` (the user is given a fully function Bash shell, with which they
-  can perform many operations, including running the binary)
+- By `shell` (the user is given a fully-functioning shell, with which they can
+  perform many operations, including running the binary)
 - By `raw` (the user interfaces directly with the challenge itself)
 
 The `method` determines how the flag can be obtained:
@@ -1347,30 +1347,29 @@ The `method` determines how the flag can be obtained:
 - By `raw` (the challenge itself provides the flag)
 
 To produce the image, the challenge is first built using the same mechanisms as
-described in the Compilation section above. Then, a Dockerfile that contains a
-pre-defined setup as well as specified ports and setup scripts can be created.
+described above in [Compilation](#compilation). Then, using the
+predefined-setup, the rest of the image is setup, possibly with some additional
+configuration options.
 
 ### Auto-solvers
 
-Over a couple years of running and playing CTFs in academic settings, one of
-the concerns that constantly emerges is the need to verify that challenges are
-solvable. If a challenge is broken, it should be detected early on in the
-development process, to allow the challenge designer time to amend it.
-The widely accepted solution is to automate this, by requiring that all
-challenges provide a solver script to automatically extract the flag from a
-challenge so that verification is easy and regressions can be tracked over time.
+One of the main concerns that emerges with CTF challenges is the need to verify
+that they are actually solvable. If a challenge is broken, it should be
+detected early on in the development process, to allow the challenge designer
+time to amend it. Automating this allows for great flexibility; by requiring
+that all challenges include a solve script to extract the flag from a
+challenge, verification becomes trivial and regressions can be tracked over time.
 
-However, doing this with automatically generated challenges is difficult and is
-one of the main obstacles (**citation needed**) to deploying a system like this
-in an academic setting. Challenges must all be solvable and the difficulty (by
-measuring the complexity of the solution) must remain *at least* roughly the
-same, or the marks for the module will be skewed unfairly.
+However, employing this approach with automatically generated challenges is
+difficult and remains a key issue to address before deploying a system like
+this in a real-world scenario. Challenges must all be solvable and their
+difficulty variation should be as low as possible, or the results of the CTF
+will be skewed unfairly.
 
-To resolve this, along with automatic challenge synthesis, we provide solution
-script synthesis as part of environment generation. While it would be possible
-to define a single solve script for each specification, that takes into
-consideration all possible randomisations, writing such a script would be
-unnecessarily quite challenging. Instead, we allow templating the script with
+To resolve this, we provide solution script synthesis as part of environment
+generation. While it may be possible to define a solve script for each
+specification that considers all possible randomisations, implementing such a
+script would be very complex. Instead, we allow templating the script with
 several special variables, with values known and derived during the synthesis
 process that are unavailable to challenge solvers.
 
@@ -1396,25 +1395,24 @@ reliability.
 
 To judge the success of the project and the validity of the overall design
 goals, we designed a small reverse-engineering challenge using vulnspec and
-attached it to a small survey in order to evaluate the challenges, what
-participants thought of them, and how much they had learned from them.
+attached it to a survey in order to evaluate the challenge, learning what
+participants thought of it, and how much they had learned.
 
 To do this, we created two parts to the challenge - the specification for each
 part was identical, except for minor variations in the flag generation
-templates. Each challenge part reveals half of the flag, which are concatenated
-together to produce the full flag. The specifications for these are listed in
-[Appendix X](#appendix-x), along with the full contents of the survey, and are
-also present in the `examples/server/` directory in the codebase. These
-challenges were designed to be very, very simple, ideally taking less than 10
-minutes for a reasonably experienced reverse engineer, in an attempt to elicit
-more responses to the survey.
+templates. Each challenge part reveals half of the flag, which can be
+concatenated together to produce the full flag. The specifications for these
+parts are listed in [Appendix X](#appendix-x), along with the full contents of
+the survey. These challenges were designed to be very, very simple, ideally
+taking less than 10 minutes for a reasonably experienced reverse engineer, in
+an attempt to elicit more responses to the survey.
 
 To properly randomise these challenges and to collect results from the survey,
 we built a small dockerized web application to use the `vulnspec` library to
 synthesise and build individualised challenges for each user based on a
-randomly generated user id stored as cookie. Additionally, the web app collects
-survey responses, saving them to a PostgreSQL database, which is managed and
-interfaced with using a Directus dashboard.
+randomly generated user id stored in a cookie. Additionally, the web app
+collects survey responses, saving them to a PostgreSQL database, which is
+managed and interfaced with using a Directus dashboard.
 
 The challenge and survey were open for around two weeks and throughout the
 duration collected 7 responses. While insufficient to draw strong conclusions,
@@ -1436,24 +1434,26 @@ challenge easier (or at least, no more difficult) than the first part.
 
 Additionally, more than half of the participants indicated that they would have
 valued a third part to the challenges, and none indicated that they would not
-have been opposed to a third part (see Figure \ref{fig:interest-npart}), which,
-at the very least, indicates that most of the participants did not find these
+have been opposed to it (see Figure \ref{fig:interest-npart}), which, at the
+very least, indicates that most of the participants did not find these
 challenges boring.
 
 ![Interest in a Part 3\label{fig:interest-npart}](./assets/graphs/interest-part3.svg){ width=50% }
 
-However, ultimately, the distribution between which part was most interesting
-(see Figure \ref{fig:interest-general}) and the content of textual responses
-show that there was little to no semantic difference between each part - in
-fact, solutions used to solve part 1 translated almost directly to part 2.
+However, ultimately, the question regarding which challenge was more
+interesting (see Figure \ref{fig:interest-general}) and the content of textual
+responses show that there was no major difference bin etween each part. In
+fact, because solutions used to solve part 1 translated directly to part 2,
+participants were more likely to rate both challenges as of equal interest, or
+part 1 as of more interest, than other options.
 
 ![General challenge interest\label{fig:interest-general}](./assets/graphs/interest.svg){ width=50% }
 
 This is in part due to the fact that this reverse engineering challenge could
 be solved using binary patching or strace in less than a minute; with a
 more complex specification it would be possible to ensure that both challenges
-required different solutions, which would hopefully show more of a difference
-in required solutions.
+required different solutions, which would hopefully show more of an equal
+distribution between responses indicating interest in challenges.
 
 Therefore, while vulnspec may not have use in generating extreme differences in
 variation to create entirely new challenges, the approach used and the
@@ -1467,87 +1467,88 @@ environment.
 In drawing to a close, we can see that vulnspec, and it's related goals and
 ideas have a place in CTF competitions and academic modules.
 
-...
+We have worked to further a paradigm of automatic challenge generation, showing
+that the space of template-based randomisers is full of potential.
+Additionally, we have shown that by embedding complex spatial and temporal
+relationships in a domain-specific language, we can use new techniques to
+explore what possible interpretations could have introduced these
+relationships.
 
-As individuals writing challenges, we've found that using vulnspec as opposed
-to directly utilizing C-primitives has been incredibly valuable, especially
-regarding the firm guarantees that vulnspec provides regarding memory layout
-and variable accesses. These features have helped us to quickly develop a
-variety of examples quickly that are suitable for learners of low-level
-analysis.
+As challenge designers, we've found that using vulnspec to write challenges has
+been incredibly valuable, especially regarding the firm guarantees that the
+language provides regarding memory layout and variable accesses. These features
+have helped us to quickly develop a variety of examples that are suitable for
+learners of low-level analysis.
 
-In the future, we hope to continue to develop and use the tools developed as
+In the future, we hope to continue to develop and use the tools created as
 part of this project, and hopefully extend them to an even wider variety of
-challenge types and areas.
+challenge types.
 
 ## Future work
 
-Unfortunately, due to time constraints, not every desired feature made it in to
-the final result. With more time to complete the project, there would be plenty
-of future opportunities for expanding and improving the technique of challenge
-generation found in this report.
+Unfortunately, not every planned feature could be developed in time. In the
+future, there are plenty of opportunities for expanding and improving the
+techniques of challenge generation found in this report.
 
-One major area that could use more work would be in the random variation of
-theming - currently, the challenge designer still requires writing context code
-instead of just the vulnerability description. Ideally, more powerful random
-generation could synthesise code into a handful of "scenarios", selecting NOPs,
-interfacing with "glue" code, and create input and output strings based on this
-scenario. For example, scenarios could include a fake network protocol, or a
-stock checker command-line tool, or any common CTF scenario. Vulnerabilities
-could then be integrated into these pre-built scenarios, to provide themed
-variations.
+One major area that could use more work would be in random theming - currently,
+the challenge designer still needs to write context code instead of just the
+vulnerability description. Ideally, more powerful random generation could
+synthesise code into a handful of "scenarios", selecting NOPs, interfacing with
+"glue" code, and create input and output strings based on this scenario. For
+example, scenarios could include a fake network protocol, or a stock checker
+command-line tool, or any common CTF scenario. Vulnerabilities could then be
+integrated into these pre-built scenarios, to provide themed variations.
 
-To further improve the random variation of challenges, it would be nice to
+To further improve the random variation of challenges, it would be possible to
 integrate the LLVM patches built as part of Blinker [@blinker] to produce more
 binary-level variations such as randomising table orders, function layouts and
 exact instructions and registers used to perform operations. This would work
-well as a third layer in the process, as binary-level randomisation after
+well as an additional layer to the process, binary-level randomisation after
 source-level randomisation.
 
 Another area for improvement is in NOP generation; in the current version, NOPs
-must all be written by hand and cannot have large side-effects, since those
-influence the effectiveness of solve scripts. One possibility for automatically
-generating NOPs would involve scanning existing codebases for small snippets of
-code and including them, using symbolic analysis with angr [@angr-paper]
-to produce automatic solves for those sections. This improvement would lead to
-almost a middle-ground between randomly varying safe codebases and using a
-pure-specification driven approach, using other codebases for their code as
-well as for their variable and function naming conventions.
+must all be written by hand and cannot have large side-effects, since those can
+influence the effectiveness of solve scripts. One possibility would be to
+automatically generate NOPs by scanning existing codebases for small snippets
+of code, using symbolic analysis with angr [@angr-paper] to produce automatic
+solve snippets for those sections. This improvement would lead to a
+middle-ground between random variation of safe codebases and using a
+pure-specification driven approach.
 
 Finally, for an approach like this to take off, it requires integration into
 other pieces of software. While already integrated into a mini custom CTF
 platform for the purpose of gathering data with a survey, integration with
-other widespread platforms such as CTFd [@ctfd] would decrease friction in
-adopting vulnspec. Additionally, IDE support with syntax checking and error
-and warning integration with a language server [@language-server-protocol]
-would help to improve adoption and usability.
+widespread platforms such as CTFd [@ctfd] would decrease friction in adopting
+vulnspec. Additionally, IDE support with syntax checking and error analysis
+with a language server [@language-server-protocol] would help to improve
+adoption and usability.
 
 ## Evaluation
 
-With the power of hindsight, there are a number of areas throughout the
-project, that could have benefited from a more thorough design process, earlier
-on in the year.
+With the power of hindsight, there are a number of areas throughout the project
+that could have benefited from a more thorough design process, earlier on in
+the year.
 
 Firstly, despite how interesting and useful it was to develop a lexer and
 parser from scratch, in the future it would be better to use a parser generator
 such as Flex/Bison, to more easily scale up to new syntax. Alternatively, a
 different language choice, such as Rust, would allow for a more combinatorial
 approach to parsing due to many of the functional abilities of the language.
-Unfortunately, parsers from scratch scale poorly, and the limits of that
+Unfortunately, parsers built from scratch scale poorly, and the limits of that
 approach were definitely tested towards the end of the project.
 
 Regarding type checking, it would have been useful to derive a more powerful
 model, perhaps by integrating with LLVM or GCC to provide deeper insights into
-C-types, without needing to create our own model. However, the model used is
-interesting to use, and we hope further applications of the model can be found
-in simple type checking.
+C-types, without needing to create our own model. However, our model is
+interesting to use, and we hope further applications of it can be found in
+simple type checking systems.
 
 In the area of interpretation, it would have been excellent to have been able
-to spend more time working in this area, perhaps by reducing the complexity of
-transformation from the AST to the ASG which limited ability to quickly
-innovate and make dramatic changes to the structure of the language. This is
-clearly the area of most of our innovation, so it would have been interesting
-to explore this area more.
+to spend more time developing the possible interpretations.  This is clearly
+the area of most of our innovation, so it would have been interesting to
+explore this more. One possible approach that could have helped, would be to
+have reduced the complexity of the transformation between the AST to the ASG,
+which limited our ability to quickly innovate on the structure of the language.
 
 However, many of these changes are relatively minor, and we believe that our
 general approach has been successful, and that as a result, we have contributed
