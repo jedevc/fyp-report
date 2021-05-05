@@ -1005,7 +1005,11 @@ $if(beamer)$
 \frame{\titlepage}
 $endif$
 $if(abstract)$
+\hspace{0pt}
+\vfill
 \textbf{\textit{Abstract} ---} {\bfseries $abstract$}
+\vfill
+\hspace{0pt}
 $endif$
 $endif$
 
@@ -1018,8 +1022,6 @@ $for(include-before)$
 $include-before$
 
 $endfor$
-\begingroup
-\let\clearpage\relax
 $if(toc)$
 $if(toc-title)$
 \renewcommand*\contentsname{$toc-title$}
@@ -1047,7 +1049,6 @@ $endif$
 }
 $endif$
 $endif$
-\endgroup
 
 $if(lot)$
 \listoftables
