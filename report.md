@@ -93,9 +93,8 @@ standardise the process by which challenges are developed and hosted. This
 means that for every CTF, challenges must be painstakingly developed
 one-by-one, with little ability to reuse challenges from previous competitions.
 Cheating in the form of "flag-sharing" has also become an increasing cause for
-concern (**citation needed**), with this allowing teams to gain unfair
-advantages, or students to plagiarise results while remaining difficult to
-detect by organisers.
+concern [@apg], with this allowing teams to gain unfair advantages, or students
+to plagiarise results while remaining difficult to detect by organisers.
 
 One approach taken by many competitions is to introduce flag randomisation, so
 that flags valid for one individual are not valid for others. Recent
