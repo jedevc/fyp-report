@@ -107,7 +107,7 @@ competitions.
 In this report, we present our take on challenge randomisation, specifically
 concerning binary-focused challenges. We introduce `vulnspec`, a
 Domain-Specific programming language with the ability to dictate memory layout
-and control flow graph randomisation, allowing easy encodings of many
+and control flow graph randomisation, allowing easy encoding of many
 vulnerabilities. In this report, we explain both the design and implementation
 decisions, as well as the technical details of our approach and evaluate our
 success using a mini-CTF and survey.
@@ -536,12 +536,12 @@ Then, the question of compatibility simply becomes one of reachability, i.e. to
 use type $A$ in the context of type $B$, the meta-type of $B$ must appear in a
 path originating from the meta-type of $A$. This technique allows checking most
 safe operations, while requiring extra care when trying unsafe operations, like
-downcasting from floats to ints.
+down-casting from floats to ints.
 
 Beyond the meta-type graph here, we additionally define a universal meta-type,
 which skips the reachability check entirely, always returning true; this type
 can be assigned anything and used anywhere. This is the meta-type that we use
-when the meta-type is unknown, such as with external library integrations. This
+when the meta-type is unknown, such as with external library integration. This
 type isn't notated in the graph directly, since it's defined as an additional
 abstraction on top.
 
@@ -584,7 +584,7 @@ libraries:
 ...
 ```
 
-Each subfield's purpose is shown below:
+Each sub-field's purpose is shown below:
 
 | Field           | Purpose |
 | :-------------- | :------ |
@@ -596,7 +596,7 @@ For our libc implementation, we choose libmusl, instead of the more frequently
 used glibc. Because it is more lightweight, we expected that libmusl would
 prove simpler to programmatically analyse, and empirical tests confirmed this.
 Since the tool extracts all the data of the library, all results from libmusl
-are transferrable to when we use glibc for building challenges.
+are transferable to when we use glibc for building challenges.
 
 To generate builtins from these libraries, we first scan for common build
 system scripts, such as `configure` and `Makefile`, which we run before
@@ -626,7 +626,7 @@ From these tags, we translate each C-style name into a vulnspec-style name, by
 appending `"@<lib>.<header-name>"` - e.g. `printf` becomes `printf@libc.stdio`.
 We also translate each C-style type signature into a vulnspec-style type that
 can be parsed using the vulnspec parser. These tag definitions are then written
-to JSON files, ready for utilization by the main `vulnspec` tool.
+to JSON files, ready for utilisation by the main `vulnspec` tool.
 
 ## Translation
 
@@ -644,7 +644,7 @@ recursion and first-order functions. This introduced complexity allows
 performing more complex transformations such as [interpretation](#interpretation).
 
 To perform the translation process, vulnspec uses a similar visitor pattern to
-the type chcker. However, instead of returning a type labelling for each node
+the type checker. However, instead of returning a type labelling for each node
 at each level, we return a new node that has been translated. The domain and
 co-domain of this transformation are completely separate (except for explicitly
 labelled types), and the nodes used to represent the block-chunk graph are
@@ -729,7 +729,7 @@ The challenge designer can force one of the interpretations, using a block or
 chunk constraint, as explained earlier in **[Blocks and Chunks](#blocks-and-chunks)**.
 If a constraint has not been specified, then an interpretation is randomly
 selected. The only exception here is the `main` block, which must always have a
-function interpretation, since it is the entrypoint to the program, and so
+function interpretation, since it is the entry-point to the program, and so
 cannot appear inline.
 
 After all blocks and chunk have been assigned an interpretation, we can begin
@@ -989,7 +989,7 @@ signature of the function.
   \label{fig:lift-vecspace}
 \end{figure}
 
-This fairly complex transformation can be intuitively understood by reframing
+This fairly complex transformation can be intuitively understood by re-framing
 usage captures as a vector space as in Figure \ref{fig:lift-vecspace}. In this
 diagram, $u$ is a usage capture and $m$ is the maximal, both computed from the
 origin (where the variable is globally accessible). From this, we want to
@@ -1315,7 +1315,7 @@ used to fully build a challenge binary, as well as output a Dockerfile for
 building and hosting an environment in which the challenge can be successfully
 run.
 
-Docker is an open-source tool providing paravirtualization to deliver and run
+Docker is an open-source tool providing para-virtualization to deliver and run
 applications along with their environments in fully complete containers
 [@wiki-docker]. Each container is based off of an image, each of which is built
 using commands from a Dockerfile. By having vulnspec output a Dockerfile, we
@@ -1368,7 +1368,7 @@ will be skewed unfairly.
 
 To resolve this, we provide solution script synthesis as part of environment
 generation. While it may be possible to define a solve script for each
-specification that considers all possible randomisations, implementing such a
+specification that considers all possible randomisation, implementing such a
 script would be very complex. Instead, we allow templating the script with
 several special variables, with values known and derived during the synthesis
 process that are unavailable to challenge solvers.
@@ -1442,7 +1442,7 @@ challenges boring.
 
 However, ultimately, the question regarding which challenge was more
 interesting (see Figure \ref{fig:interest-general}) and the content of textual
-responses show that there was no major difference bin etween each part. In
+responses show that there was no major difference in-between each part. In
 fact, because solutions used to solve part 1 translated directly to part 2,
 participants were more likely to rate both challenges as of equal interest, or
 part 1 as of more interest, than other options.
