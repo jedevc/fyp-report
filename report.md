@@ -392,7 +392,6 @@ The above uses the `M_PI` value defined in the `math.h` header. Note that, in
 this case, we explicitly include the header, which normally would not be
 required. For more information, see **[External Library Integration](#external-library-integration)**.
 
-
 # Implementation
 
 In this chapter, we demonstrate how the above design goals are implemented to
@@ -592,74 +591,67 @@ Each subfield's purpose is shown below:
 | :-------------- | :------ |
 | `root`          | Library path relative to the current directory |
 | `include`       | Locations to search for header files |
-| `include_paths` | Locations to recursively search for included files |
+| `include_paths` | Locations to search for additional header files |
 
-For out libc implementation, we choose libmusl, instead of the more frequently
+For our libc implementation, we choose libmusl, instead of the more frequently
 used glibc. Because it is more lightweight, we expected that libmusl would
 prove simpler to programmatically analyse, and empirical tests confirmed this.
 Since the tool extracts all the data of the library, all results from libmusl
-are transferrable to when we use glibc.
+are transferrable to when we use glibc for building challenges.
 
-The builtin generation process is fairly straightforward from the provided
-data. Initially, we scan for common build autotools and Makefile build scripts,
-such as `configure` and `Makefile` respectively, which we run before continuing
-to the next stage. For some libraries, this *might* not be required, however,
-many more sophisticated and complex libraries automatically generate header and
-source files which may need to be scanned in later stages.
+To generate builtins from these libraries, we first scan for common build
+system scripts, such as `configure` and `Makefile`, which we run before
+continuing to the next stage. While this may not be required for all libraries,
+many complex libraries such as libc generate header and source files which need
+to be scanned.
 
-Next, we recursively traverse all the specified `include` directories, looking
-for `.h` header files, collecting them into a data structure as we go. As we do
-this, we also open each header file, scanning for all its includes using a
-simple regular expression - the scanner then searches for this include in the
-`include_paths` directories, adding it as a child of the top-level header if
-found. Then we repeat this process, scanning this new file includes, looking
-for those, etc.
+Next, we recursively traverse all the specified `include` directories,
+collecting all `.h` header files. As we iterate through them, we open each one,
+scanning for `#include` directives using a simple regular expression - the
+scanner then searches for this path in the `include_paths` directories,
+adding it as a child of the top-level header if found. Then we repeat this
+process, scanning this new file's includes, looking for those, etc.
 
-This scanning process may seem needlessly complex, however, not all important
-constructs in a header will be directly declared in that header. For example,
-the `stdint.h` header does not actually include a definition of `uint8_t`,
-instead, loading it from an internal source - by recursively searching for that
-source, we can find the true definition and implicitly connect it to `stdint.h`.
+This scanning process may seem needlessly complex, however, it catches the edge
+cases where definitions for a header are not directly declared in that header.
+For example, the `stdint.h` header does not define `uint8_t` directly, instead,
+loading it from an internal source. By recursively searching for that source,
+we can find the true definition and connect it to `stdint.h`.
 
-Once we have collected each header file, we can scan it. Initially, we
-attempted an approach based on regular expressions - however, parsing even a
-very small subset of C with this quickly becomes unwieldy. Therefore, we
-switched to a `ctags` based approach, using Universal Ctags. As we run the
-`ctags` program over each header file, we get back a list of tag objects which
-represent variables, types and function declarations from that file, along with
-their type signatures.
+Once we have collected all header files and their links, we begin processing
+using the Universal Ctags tool. As we run the `ctags` program over each header
+file, we get back a list of tag objects which represent variables, types and
+function declarations from that file, along with their type signatures.
 
-From these tags, we now translate each C-style name into a vulnspec-style name,
-by appending `"@<lib>.<header-name>"` - e.g. `printf` becomes
-`printf@libc.stdio`. We also translate each C-style type signature into a
-vulnspec-style type, using a stack model (**More elaboration needed**). We can
-then write these to JSON files, ready for use in processing specifications that
-utilise libraries.
+From these tags, we translate each C-style name into a vulnspec-style name, by
+appending `"@<lib>.<header-name>"` - e.g. `printf` becomes `printf@libc.stdio`.
+We also translate each C-style type signature into a vulnspec-style type that
+can be parsed using the vulnspec parser. These tag definitions are then written
+to JSON files, ready for utilization by the main `vulnspec` tool.
 
 ## Translation
 
-Once the AST has been checked and transformed, we can convert it to a
-higher-level representation, the block-chunk graph. In this representation,
-instead of merely representing the low-level syntax of the language, we more
-completely represent the relationships between individual blocks and their
-calls, and chunks and their variables. Whereas in the AST we represent calls
-and variable references simply by using their names, in the block-chunk graph,
-we use actual pointers (or the Python equivalent) to show the relationships.
+Once the AST has been validated, it can be converted to a higher-level
+representation, the block-chunk graph. In this representation, instead of
+merely representing the low-level syntax of the language, we more completely
+represent the relationships between individual blocks and their calls, and
+chunks and their variables. Whereas in the AST we represent calls and variable
+references simply by using their names, in the block-chunk graph, we use actual
+pointers (or the Python equivalent) to show the relationships.
 
 This has enormous implications in how we can traverse the graph, easily
-allowing defining complex operations such as structural traversals and
-structural maps using recursion and first-order functions. This introduced
-complexity allows performing more complex operations such as interpretation,
-described **later**.
+allowing defining operations such as structural maps and traversals using
+recursion and first-order functions. This introduced complexity allows
+performing more complex transformations such as [interpretation](#interpretation).
 
 To perform the translation process, vulnspec uses a similar visitor pattern to
-during type checking. However, instead of returning a type labelling for each
-node, we return a new node that has been translated. The domain and co-domain of
-this transformation are completely separate (except for explicitly labelled
-types), and the nodes used to represent the block-chunk graph are similar but
-unique to the ones in the tree. They are also, in a few cases, simpler,
-not encoding the complexity of different literal values and simplifying some
-nodes away into other constructs.
+the type chcker. However, instead of returning a type labelling for each node
+at each level, we return a new node that has been translated. The domain and
+co-domain of this transformation are completely separate (except for explicitly
+labelled types), and the nodes used to represent the block-chunk graph are
+similar but unique to the ones in the tree. They are also, in a few cases,
+simpler, not encoding the complexity of different literal values and
+simplifying some nodes away completely.
 
 ![Overview of an example block-chunk graph](assets/diagrams/parser/blockchunk.svg)
 
@@ -668,51 +660,51 @@ some of the translations are slightly more complex:
 
 - Exact values are removed and replaced with string representations, to what
   they will be output as in C code generation. Interpretation and other later
-  stages don't require knowledge of individual values, so we can simplify it
-  here. As part of this, templates will also be resolved.
+  stages don't require knowledge of individual values, so they are simplified
+  now. As part of this, templates are also resolved.
 - If statements are unwrapped from their tree-like recursive structure to a
   sequence that simplifies processing and code generation dramatically.
 - Block splits are removed and the block is split into two separate blocks,
-  with the first one ending in calling the second. Since the later stages
-  require lots of complex block processing, this simplifies needing to handle
-  more cases.
+  with the split location in the first replaced with a call to the second.
 - Constraints are resolved from raw string representations to a collection of
-  enumerated values.
+  enumerated values, and checked for compatibility.
 
 Aside from these edge cases, the transformation is relatively straightforward,
-and prepares the internal representation for later stages of processing.
+and prepares the internal representation for later stages of processing. The
+final result is returned as an "asset", a collection of blocks, chunks and
+associated data that has been completely validated.
 
 ## Interpretation
 
-One of the most complex aspects of the project is in how the high-level
+Most of the complexity of the synthesis process lies in how the high-level
 abstract representation of the graph of blocks and chunks can be translated
 down into low-level C primitives. Mechanically, this reduces to deciding where
 in memory each chunk should be placed, and deciding the process by which each
-block can be called. We call each collection of decisions an "interpretation",
-the results of which are executed by an "interpreter" modifying the graph.
+block can be called. We call each set of these decisions an "interpretation",
+the results of which are propagated by an "interpreter" into the graph.
 
-The output of this process is a new graph, represented by a "program" object,
-that contains a collection of functions (with their own arguments, local
-variables and statements), global variables and optional external variables
-(only if the specification requires them).
+The output of this process is a modified graph, represented by a "program"
+object (rather than an asset) that contains a collection of functions (with
+their own arguments, local variables and statements), global variables, and
+optional external variables (only if the specification requires them).
 
 As the process of interpretation moves from start to finish we translate from
 the vulnspec-style block-chunk graph, into a graph that more closely represents
-the to-be-generated C code. This translation isn't performed at once and is
-instead broken up into multiple small pieces that each get it closer to the goal.
+the to-be-generated C code. This translation is broken up into multiple small
+pieces that each get it closer to the goal, gradually propagating the results
+outwards.
 
 ### Generation
 
 The most important step in the interpretation process is to remove the concepts
-of blocks and chunks almost entirely from the program. These are vulnspec
-concepts and do not translate directly down into C code, so they're removed and
-replaced with C pieces.
+of blocks and chunks from the program object. Blocks and chunks are both
+vulnspec concepts and do not translate directly down into C code, so they must
+be removed and replaced before code generation.
 
-Block represent lines of code, calls represent the relationship between
-them, while chunks represent variables appearing next to each other in
-sequence. For both these blocks and chunks, we define a set of
-"interpretations" - essentially, a technique for translating them into lower
-level C.
+Block represent lines of code, calls represent the relationship between them,
+while chunks represent variables appearing next to each other in sequence. For
+both these blocks and chunks, we define a set of valid interpretations which
+dictate how they can be translated into low-level C.
 
 Blocks can be assigned:
 
@@ -744,9 +736,7 @@ cannot appear inline.
 After all blocks and chunk have been assigned an interpretation, we can begin
 to apply those through all statements in the specification. We do this in two
 passes, to remove as much complexity as possible in the first pass to make the
-the latter, more complex, pass easier to reason about. In the first pass, we
-remove all calls to inline blocks, while in the second pass, we remove all
-calls to function blocks.
+the latter, more complex, pass easier to reason about.
 
 ### Inline call reduction
 
@@ -757,76 +747,68 @@ the resulting code can make several assumptions that allow for a simpler
 implementation.
 
 To reduce the inline calls, we map over each statement in every block,
-detecting if a call is made to an inline block. If it is, we replace it with a
+detecting if a call is made to an inline block. If it is, it is replaced with a
 group of statements, which are the mapped statements that make up the block it
 references (this is slightly inefficient, since we might end up mapping a
 statement twice, but it does ensure that there are no orphan inline calls).
-This statement group is a construct only created by this specific portion of
-the code and essentially represents a collection of statements that should be
-viewed as a series of lines of code - this is mainly provided to simplify the
-process of defining a mapping function, so that the type can remain
-$\text{Block} \to \text{Block}$.
 
 However, it is possible that in a few edge cases the above procedure won't work
 entirely correctly. This is because the exact order that blocks are visited in
-still matters despite the additional level of recursive mapping. If a function
-block is modified as part of the above procedure, then other function blocks
-that refer to this function block will still point to the old version, not the
-new one, as a side-effect of using a more condensed graph representation.
+still matters despite the additional level of recursive mapping. Because of the
+more condensed graph representation, if a function block is modified as part of
+the above procedure, then other function blocks that refer to it will still
+point to the older unmodified version, not the new one, as a side-effect of
+using a more condensed graph representation.
 
 To resolve this issue, after mapping over every block completely, after all
 stages, we "repair" all pointers by looking up the name of the block that they
-expect to be pointing at, instead directing it to the new, correct block.
-
-After all this, all inline calls are correctly removed and the next stage of
-interpretation can begin.
+expect to be pointing at, instead directing it to the new, correct block.  With
+this, all inline calls are correctly removed and the next stage of
+interpretation begins.
 
 ### Function call reduction
 
 In this next pass, we can now resolve all calls to the remaining blocks, those
-that are assigned a "function" interpretation. At this stage, we don't create
-the functions themselves, but simply compute what the calls to them should look
-like. However, this is not as simple as the previous stage, we can't just
-insert a call of the form `block()` - some number of arguments may need to be
-passed!
+that are assigned a function interpretation. At this stage, we don't create the
+functions themselves, but simply compute what the calls to them should look
+like. However, this is not as simple as the previous stage, we can't simply
+insert a call of the form `block()`, as some number of arguments may need to be
+passed.
 
-The need for introducing function arguments occurs when a chunk that is used in
-the block is assigned a "local" interpretation and is also accessed in some
-other block that eventually (either directly or indirectly) calls to it.
-
-For example, suppose that a block $x$ calls block $y$, which we can notate as
-$x \rightarrow y$. If a variable $\alpha$ is declared in block $x$ as a local
-variable, then for $y$ to access this variable, the call $x \rightarrow y$ can
-be modified to pass $\alpha$ as a parameter. By performing this computation for
-all variables, for all calls, we can compute the function signature of each
-block and so modify all the vulnspec block calls into function-style calls.
+The need for introducing function arguments occurs when a chunk is assigned a
+local interpretation, but it is accessed in more than one block. For example,
+suppose that a block $x$ calls block $y$, which we notate as $x \rightarrow y$.
+If a variable $\alpha$ is referred to by both $x$ and $y$, then for $y$ to
+access $\alpha$, the call $x \rightarrow y$ must be modified to pass
+$\alpha$ as a parameter. By performing this computation over all variables, for
+all calls, we can gradually compute the function signature of each block and so
+modify all the vulnspec calls into function-style calls.
 
 #### Rooting
 
-To determine which function calls need to be patched with what parameters, we
-first need to "root" each chunk, i.e. find a function block such that all
-references to a chunk are contained in that block and its descendants. We can
-then add that chunk's variables to the collection of local variables (at a
-later stage when we actually construct the function).
+Firstly, to determine which function calls need to be patched with what
+parameters, we need to "root" each chunk, i.e. find a function block, called a
+root, such that all references to a chunk are contained in that block and its
+descendants. This chunk's variables then clearly belong to that function
+block's stack frame.
 
 This process is essentially a variation of the lowest common ancestor problem
 in graph theory. However, the usual techniques for calculating this are for trees
 or directed acyclic graphs, which aren't sufficient for this problem since the
-call graph may contain cycles through the expression of recursive or
-co-recursive blocks.
+call graph may contain cycles (through recursion).
 
-A naive algorithm (and what we initially implemented) finds every block that
-references a local variable, then computes all possible paths to that block.
-After finding all the paths, the naive algorithm takes the common prefix of all
-paths to find the "best" location to place a variable. This result will be
-valid, however, as we show later with an example, it may not be optimal.
+A naive algorithm finds every block that references a local variable, then
+computes all possible paths to those blocks. After finding all paths, the
+algorithm extracts the common prefix of all paths to find the root location
+to place a variable. This result will be valid, however, as we show later with
+an example, it may not be optimal, and a "better" solution may be possible.
 
 The more complex "deepest-valid" algorithm starts the same way, computing all
-paths to a variable. Then, it finds the complete set of valid owners by finding
-the set of all blocks that are present in all paths (since the root block has
-to be present in every possible execution), removing those blocks which are
-part of a cycle. Finally, the deepest of these blocks can be selected to be the
-owner.
+paths to a variable. Then, it computes the complete set of valid roots by
+finding the set of all blocks that are present in all paths (since the root
+block has to be present in every possible execution), additionally, removing
+those blocks which are part of a cycle. Finally, the deepest of the remaining
+roots can be selected to be the best root.
 
 To see the difference in these algorithms, consider the following
 specification, assuming that all chunks are local and all blocks are functions:
@@ -866,9 +848,9 @@ By traversing the call graph, we can easily compute all paths to each variable.
 - $d$ is referenced by $x \rightarrow y \rightarrow z$ and $x \rightarrow z$
 - $e$ is referenced in all blocks by $x$, $x \rightarrow y$, $x \rightarrow y \rightarrow z$ and $x \rightarrow z$
 
-The naive method, that computes the common prefixes of all paths will
-correctly place $a$, $c$ and $e$ in $x$ and $b$ in $y$. However, it will
-sub-optimally place $d$ into $x$, when it could be easily placed into $z$.
+The naive method, computing the common path prefixes, will correctly place $a$,
+$c$ and $e$ in $x$ and $b$ in $y$. However, it will sub-optimally place $d$
+in $x$, when it could be better placed into $z$.
 
 The deepest-valid algorithm correctly places $d$, by first detecting $x$ and
 $z$ as valid locations for the variable, then choosing the deepest of the
@@ -882,23 +864,22 @@ Placing all the variables, we can compute the following:
 
 #### Signature
 
-With each chunk rooted, we can now easily find what each function signature
-should be. For each function call between the root of a variable's chunk and
-the same variable's usage, we need to pass that variable in the function call.
+With each chunk rooted, we can now compute each functions signature. For each
+function call between the root of a variable's chunk and the same variable's
+usage, we need to pass that variable in the function call.
 
 Intuitively, this works because based on the above rooting stage, we know that
 each block that requires a variable will have access to it through an ancestor
 block. Then inductively, we can show that a block with direct access to a
-variable in its scope will pass access to that variable to all its children
-which it calls. Because of this, all descendants of the root block that need
-access to the variable can get it!
+variable in its scope can pass access to that variable to all its children
+which it calls.
 
 Practically, the signatures of function calls can be constructed by iterating
-through all paths to all variables (after skipping to the root), patching
-each call to also include the variable name that is needed at a lower level.
+through all paths to all variables from the root, patching each call to include
+the variable that is needed at a lower level.
 
 For example, for the variable $e$ above (rooted at $x$), from the path $x
-\rightarrow y \rightarrow z$, we know that calls $x \rightarrow y$ and
+\rightarrow y \rightarrow z$, we know that the calls $x \rightarrow y$ and
 $y \rightarrow z$ must contain $x$ as a parameter. Repeating this for all
 variables and paths, we can create a full picture of all rooted variables and
 the function signatures:
@@ -913,7 +894,7 @@ the function signatures:
 
 Unfortunately, while the above algorithm accurately describes how to decide
 where in memory variables should be located and how to share access to them,
-if we use only this procedure, the function signatures will be incorrect.
+using only this procedure, the function signatures will still be incorrect.
 
 To see this, we present the following example:
 
@@ -942,10 +923,10 @@ that has been made local by interpretation. In this case, this would change the
 function signature to accept a pointer to $a$ and so allow changing 
 the value correctly.
 
-To lift a variable, we first recursively find all usages of that variable in each
-block, detecting all the ways it is accessed, recording these as "usage
-captures" and collecting them for later. These captures record the exact
-pattern of reference, such as if it is addressed (with the address of
+To lift a variable, we first recursively find all usages of that variable in
+each block, detecting all the ways it is accessed, recording these as "usage
+captures" and collecting them for later. Each of these captures record an exact
+pattern of reference, such as if a variable is addressed (with the address-of
 operator), dereferenced, or indexed into, as well as any compound of the above.
 Along with these expression types, we also define an implicit "virtual"
 reference, to refer to the usage of a variable as an lvalue, since it requires
@@ -974,26 +955,26 @@ the outermost items can derive the innermost items using common operators.
   \label{fig:lift}
 \end{figure}
 
-To derive the maximal capture, we compare two usage captures trees at a time,
-determining at each level what capture is required to allow deriving both of
-the values. Then we use this as a first-order function in a *reduce* operation
-to calculate the maximal capture for all the captures. Now, by traversing this
-final computed capture, we derive a type that is the correct type needed in
-the function signature, since it represents the least-broad type needed to
-derive all the uses of the variable.
+To derive the maximal capture, we can compare two usage captures trees at a
+time (since they are subsets of expressions), determining at each level what
+capture is required to allow deriving both of the values. Then we use this as a
+first-order function in a *reduce* operation to calculate the maximal capture
+over all the captures. Now, by traversing this final computed capture, we can
+derive a type that is the correct one in the function signature, as it
+represents the least-broad type needed to re-create all the usages correctly.
 
-All that's left now is to translate each usage capture that is contained in
-each block into a new capture that correctly uses the new maximal as a basis
-for deriving the same value and resulting operation as before. To do this, we
-create an inverted usage capture of the maximal that uses the new derived type
-of the maximal, but every individual operation is inverted, so dereferences become
-references, etc. This inversion essentially represents how one might get from
-the new maximal to the raw value of the variable (however, its likely
-nonsensical because it might involve refs of refs and other strange
-structures). However, we can take this inversion and put into each found usage
-capture in place of the old one. Then we can simplify this new capture, by
-removing ref and deref pairs. Eventually, we derive a new usage capture which
-represents the new usage of the variable within the signature of the function.
+Finally, to complete the lifting process, we need to re-create each usage
+capture a new capture that correctly uses the new maximal as a basis for
+deriving the same result as before. To do this, we create an inverted usage
+capture of the maximal that uses the new derived type of the maximal, but every
+individual operation is inverted, so dereferences become references, etc. This
+inversion essentially represents how one might get from the new maximal to the
+raw value of the variable (however, its likely nonsensical because it might
+involve refs of refs and other strange structures). However, we can take this
+inversion and merge it into each found usage capture in place of the old
+variable. Simplifying this capture, by removing ref and deref pairs, we derive
+a new usage capture which represents the new usage of the variable within the
+signature of the function.
 
 \begin{figure}[H]
   \begin{tikzpicture}
@@ -1009,43 +990,41 @@ represents the new usage of the variable within the signature of the function.
   \label{fig:lift-vecspace}
 \end{figure}
 
-This can be intuitively understood by interpreting usage captures as a vector
-space as in Figure \ref{fig:lift-vecspace}. In this diagram, $u$ is a usage
-capture and $m$ is the maximal, both computed from the origin (where the
-variable is globally accessible). From this, we want to compute how to get $u$
-from the new maximal, which is calculated as $u - m$, or the combination of the
-old usage capture with the inverse of the maximal.
+This fairly complex transformation can be intuitively understood by reframing
+usage captures as a vector space as in Figure \ref{fig:lift-vecspace}. In this
+diagram, $u$ is a usage capture and $m$ is the maximal, both computed from the
+origin (where the variable is globally accessible). From this, we want to
+compute how to get $u$ from the maximal $m$, which is calculated as $u - m$, or
+the combination of the old usage capture with the inverse of the maximal, as
+above.
 
 ### Finalisation
 
-In the final stage, having translated all statements and expressions in each
-block correctly, we can now translate the final remaining blocks into
-functions. Since all calls have now been removed and replaced with new
-statements and all variable references have been fixed, all that's left to do
-is to construct the functions themselves.
+In the final stage of interpretation, having translated all calls and usage
+captures correctly, we can now translate the function blocks themselves into
+actual functions. For each block, we use the already-computed function
+signatures from rooting and lifting to construct a list of arguments and their
+types. We can also determine which local variables need to be assigned to each
+function so that they appear in the right stack frame.
 
-For each block, we can use the already-computed function signatures from
-rooting and lifting to construct a list of arguments and their types. We can
-also determine which local variables need to be assigned to each function so
-that they appear in the right stack frame.
-
-With all functions correctly defined, we can collect them along with all global
-and external variables, into a program object that represents the end product
-of interpretation. This can then be traversed later during code generation to
-produce fully valid and vulnerable C code!
+With all functions correctly defined, we collect them, along with all global and
+external variables, into a program object that represents the end output of
+interpretation. This can then be traversed later during code generation to
+produce fully valid C code.
 
 ## Randomisation
 
 An important aspect of vulnspec is to allow generating different programs that
 all contain the same described vulnerability. While during the interpretation
 process we introduce some randomness based on how we restructure the
-block-chunk graph, these changes do not introduce major changes into how the
+block-chunk graph, these changes do not introduce major variation into how the
 program actually runs, or the details of what an exploit might look like.
 
 To significantly semantically modify the output, we introduce a couple
 of possible techniques, all of which have been developed and implemented in
 vulnspec, however, it is by no means a complete list of all the possible
-transformations that could be constructed.
+transformations that could be constructed. These modifications are not made in
+a single stage, but are spread across the entire pipeline.
 
 Some of these techniques introduce surface level changes, such as the random
 name generation, others introduce semantic difference in the program (and the
@@ -1056,23 +1035,23 @@ also look significantly different.
 
 ### NOPs
 
-One of the most significant techniques for providing powerful randomisation are
-the introduction of No-Operation blocks (shortened to NOPs), that provide
+One of the most significant techniques for providing powerful randomisation is
+the introduction of No-Operation blocks (shortened to NOPs), which provide
 variance across the temporal domain.
 
 Essentially, each NOP block does nothing, except to provide some small
 additional layer of complexity to the challenge. For example, the simplest NOP
-is blank and does nothing at all, while some more complex NOPs introduce random
-delays, or print out the value of a counter as a debugging log statement, or
-introduce interesting comments into the code.
-
-To add NOPs into the block-chunk graph, we traverse it, looking for vulnspec
-calls. When we encounter one, with a random probability we alter it to instead
-call a pre-defined NOP, then modify that new NOP block to call to the original
-target. Note that at this point, interpretations have not been assigned, so
-these could eventually appear inline or as their own functions.
+is blank and literally contains no statements, while some more complex NOPs
+introduce random delays, or print out the value of a counter as a debugging log
+statement, or introduce interesting comments into the code.
 
 ![Blocks before NOP insertion](assets/diagrams/nops/graph.svg)
+
+To add NOPs into the block-chunk graph, we traverse it, looking for call
+statements. When we encounter one, with a random probability we alter it to
+instead call a pre-defined NOP, then modify that new NOP block to call to the
+original target. Note that at this point, interpretations have not been
+assigned, so these could eventually appear inline or as their own functions.
 
 ![Blocks after NOP insertion](assets/diagrams/nops/graph2.svg)
 
@@ -1086,13 +1065,12 @@ block (nop) log {
 }
 ```
 
-Introducing NOPs is slightly more complex than detailed above, especially when
-the NOP makes references to other blocks, chunks or externs. To solve this,
-when initialising the collection of NOPs, we traverse each NOP, exploring its
-connection to other blocks (including other NOPs, which is valid), as well as
-its variable references. Then, when we introduce a NOP into the block-chunk
-graph, we also have to include all the blocks, chunks and externs that it
-references.
+Introducing NOPs, as detailed above, is a slight oversimplification, notably
+when the NOP makes references to other blocks, chunks or externs. To handle
+these cases, when initialising the collection of NOPs, we traverse each NOP,
+exploring its connection to other blocks, as well as its variable references.
+Then, when we introduce a NOP into the block-chunk graph, we also have to
+include all the blocks, chunks and externs that it references.
 
 ### Templates
 
