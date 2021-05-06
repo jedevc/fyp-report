@@ -3,7 +3,9 @@ title: "Vulnerability Specification and Automatic Challenge Design"
 author: ["Justin Chadwell"]
 subauthor: 1872745
 supervisor: "David Oswald"
+degree: Computer Science BSc
 wordcount: XXXX
+header-right: "Final Year Project"
 
 abstract: |
   Capture the Flag competitions are rapidly increasing in popularity as a
@@ -18,11 +20,9 @@ abstract: |
   semantic structure of specifications, over both the spatial domain of memory
   and the temporal domain of the call flow graph.
 
-bibliography: report.bib
-csl: csl/acm-sig-proceedings
-link-citations: true
-
-header-right: "Final Year Project"
+titlepage-color: "ffffff"
+titlepage-text-color: "000000"
+titlepage-rule-color: "e08060"
 
 toc: true
 toc-own-page: true
@@ -30,11 +30,9 @@ titlepage: true
 logo: assets/uob.eps
 logo-width: 250pt
 
-degree: Computer Science BSc
-
-titlepage-color: "ffffff"
-titlepage-text-color: "000000"
-titlepage-rule-color: "e08060"
+bibliography: report.bib
+csl: csl/acm-sig-proceedings
+link-citations: true
 
 header-includes:
 - |
