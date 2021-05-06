@@ -4,7 +4,7 @@ author: ["Justin Chadwell"]
 subauthor: 1872745
 supervisor: "David Oswald"
 degree: Computer Science BSc
-wordcount: 9942
+wordcount: 9947
 header-right: "Final Year Project"
 
 abstract: |
@@ -466,10 +466,10 @@ expression (part of an expression statement). There's no way with $k$ items of
 look-ahead to work out which one is which, so we can try one, then the other,
 using backtracking.
 
-At the end of parsing, we now have an AST, representing the entire
-specification, which can now be programmatically later.
+At the end of parsing, we now have an AST, displayed in Figure \ref{fig:ast},
+representing the entire specification, which can now be programmatically later.
 
-![Abstract Syntax Tree diagram](assets/diagrams/parser/ast.svg)
+![Abstract Syntax Tree diagram\label{fig:ast}](assets/diagrams/parser/ast.svg){ width=80% }
 
 ## Type checking
 
@@ -531,9 +531,9 @@ instead, we need to verify that a type can be used in the context of another
 type. For example, in C, integers are used as Booleans, pointers are used as
 integers, etc. To help express this, we construct a directed meta-type graph
 (also in the above config file), with the vertices as meta-types and the edges
-as valid implicit conversions:
+as valid implicit conversions (see Figure \ref{fig:metatypes})
 
-![Meta-type graph](assets/diagrams/meta_types/graph.svg){ width=50% }
+![Meta-type graph\label{fig:metatypes}](assets/diagrams/meta_types/graph.svg){ width=30% }
 
 Then, the question of compatibility simply becomes one of reachability, i.e. to
 use type $A$ in the context of type $B$, the meta-type of $B$ must appear in a
@@ -655,7 +655,7 @@ similar but unique to the ones in the tree. They are also, in a few cases,
 simpler, not encoding the complexity of different literal values and
 simplifying some nodes away completely.
 
-![Overview of an example block-chunk graph](assets/diagrams/parser/blockchunk.svg)
+![Overview of an example block-chunk graph\label{fig:blockchunk}](assets/diagrams/parser/blockchunk.svg){ width=50% }
 
 Most nodes have a one-to-one correspondence in the block-chunk graph, however,
 some of the translations are slightly more complex:
