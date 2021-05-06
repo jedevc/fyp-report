@@ -16,13 +16,15 @@ abstract: |
 
   In this report, we present `vulnspec`, a Domain-Specific Programming language
   for rapidly designing and producing randomised C-based reverse-engineering
-  and pwnable challenges. We explain the synthesis pipeline and demonstrate how 
-  specifications become C programs and show how to bundle them into deployable
+  and pwnable challenges. We explain the synthesis pipeline, demonstrating how
+  specifications become C programs and how they can be bundled into deployable
   environments.
 
-  As part of synthesis, we also introduce a new technique for automatically
-  varying the semantic structure of specifications, over both the spatial
-  domain of memory and the temporal domain of the call flow graph.
+  As part of the synthesis process, we also introduce a new technique for
+  automatically varying the semantic structure of specifications, over both the
+  spatial domain of memory and the temporal domain of the call flow graph.
+  This randomisation creates complex effects, which we show how to propogate
+  through the program structure.
 
 titlepage-color: "ffffff"
 titlepage-text-color: "000000"
