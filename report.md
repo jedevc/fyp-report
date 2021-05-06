@@ -4,7 +4,7 @@ author: ["Justin Chadwell"]
 subauthor: 1872745
 supervisor: "David Oswald"
 degree: Computer Science BSc
-wordcount: XXXX
+wordcount: 9942
 header-right: "Final Year Project"
 
 abstract: |
@@ -14,11 +14,15 @@ abstract: |
   produce new and interesting challenges and the inability to detect
   widespread cheating.
 
-  In this report, we present a Domain-Specific Programming language for rapidly
-  designing and producing randomised C-based reverse-engineering and pwnable
-  challenges. We also introduce a new technique for automatically varying the
-  semantic structure of specifications, over both the spatial domain of memory
-  and the temporal domain of the call flow graph.
+  In this report, we present `vulnspec`, a Domain-Specific Programming language
+  for rapidly designing and producing randomised C-based reverse-engineering
+  and pwnable challenges. We explain the synthesis pipeline and demonstrate how 
+  specifications become C programs and show how to bundle them into deployable
+  environments.
+
+  As part of synthesis, we also introduce a new technique for automatically
+  varying the semantic structure of specifications, over both the spatial
+  domain of memory and the temporal domain of the call flow graph.
 
 titlepage-color: "ffffff"
 titlepage-text-color: "000000"
